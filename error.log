@@ -1,0 +1,17 @@
+
+> nx run web:serve:development
+
+[0m[7m[1m[31m NX [39m[22m[27m[0m  [31mvisitor is not a function[39m
+TypeError: visitor is not a function
+    at _visitJsonRecursive (D:\Projects\piloman-nx\node_modules\.pnpm\@angular-devkit+core@19.2.17_chokidar@4.0.3\node_modules\@angular-devkit\core\src\json\schema\visitor.js:48:19)
+    at visitJson (D:\Projects\piloman-nx\node_modules\.pnpm\@angular-devkit+core@19.2.17_chokidar@4.0.3\node_modules\@angular-devkit\core\src\json\schema\visitor.js:86:12)
+    at D:\Projects\piloman-nx\node_modules\.pnpm\@angular-devkit+core@19.2.17_chokidar@4.0.3\node_modules\@angular-devkit\core\src\json\schema\registry.js:319:84
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async D:\Projects\piloman-nx\node_modules\.pnpm\@angular-devkit+architect@0.2100.6_chokidar@4.0.3\node_modules\@angular-devkit\architect\src\architect.js:33:42
+Task "web:serve:development" is continuous but exited with code 1
+
+
+
+ NX   Successfully ran target serve for project web
+
+
