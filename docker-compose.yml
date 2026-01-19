@@ -1,0 +1,34 @@
+# Docker Compose для локальной разработки piloman.ru
+#
+# Запуск: docker compose up -d
+# Остановка: docker compose down
+#
+# @see https://docs.docker.com/compose/ — Docker Compose
+
+version: '3.8'
+
+services:
+  # MongoDB — база данных для хранения документов
+  # @see https://hub.docker.com/_/mongo
+  mongodb:
+    image: mongo:7.0
+    container_name: piloman-mongodb
+    restart: unless-stopped
+    ports:
+      - '27017:27017'
+    environment:
+      # Для локальной разработки без аутентификации
+      # В production используйте MONGO_INITDB_ROOT_USERNAME/PASSWORD
+      MONGO_INITDB_DATABASE: piloman
+    volumes:
+      # Персистентное хранение данных
+      - mongodb_data:/data/db
+    networks:
+      - piloman-network
+
+networks:
+  piloman-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:

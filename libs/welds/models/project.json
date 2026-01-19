@@ -1,0 +1,7 @@
+{
+  "name": "welds-models",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/welds/models/src",
+  "projectType": "library",
+  "tags": ["scope:welds", "type:model"]
+}

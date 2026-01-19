@@ -4,7 +4,7 @@
     "rootDir": ".",
     "sourceMap": true,
     "declaration": false,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "importHelpers": true,
@@ -14,7 +14,11 @@
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
-    "paths": {}
+    "paths": {
+      "@piloman/welds/models": ["libs/welds/models/src/index.ts"],
+      "@piloman/welds/data-access": ["libs/welds/data-access/src/index.ts"],
+      "@piloman/welds/feature-welds": ["libs/welds/feature-welds/src/index.ts"]
+    }
   },
   "exclude": ["node_modules", "tmp"]
 }

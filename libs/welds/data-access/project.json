@@ -1,0 +1,7 @@
+{
+  "name": "welds-data-access",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/welds/data-access/src",
+  "projectType": "library",
+  "tags": ["scope:welds", "type:data-access"]
+}

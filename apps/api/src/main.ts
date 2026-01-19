@@ -1,20 +1,58 @@
 /**
- * This is not a production server yet!
- * This is only a minimal backend to get started.
+ * NestJS API Server Entry Point
+ *
+ * Настройки:
+ * - Глобальный префикс: /api
+ * - ValidationPipe: валидация DTO с whitelist и transform
+ * - CORS: включён для разработки
+ *
+ * @see https://docs.nestjs.com/first-steps — NestJS Bootstrap
+ * @see https://docs.nestjs.com/techniques/validation#using-the-built-in-validationpipe — ValidationPipe
  */
 
-import { Logger } from '@nestjs/common';
+import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app/app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  /**
+   * Глобальный префикс API
+   * Все роуты будут доступны по /api/*
+   */
   const globalPrefix = 'api';
   app.setGlobalPrefix(globalPrefix);
-  const port = process.env.PORT || 3000;
+
+  /**
+   * Глобальный ValidationPipe
+   *
+   * - whitelist: true — удаляет поля, не описанные в DTO
+   * - transform: true — автоматически преобразует типы (string → number)
+   * - forbidNonWhitelisted: false — не бросает ошибку для лишних полей (просто удаляет)
+   *
+   * @see https://docs.nestjs.com/techniques/validation#stripping-properties
+   */
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+    })
+  );
+
+  /**
+   * CORS для локальной разработки
+   * Разрешает запросы с Angular dev server (localhost:4200)
+   *
+   * @see https://docs.nestjs.com/security/cors
+   */
+  app.enableCors();
+
+  const port = process.env['PORT'] || 3333;
   await app.listen(port);
+
   Logger.log(
-    `🚀 Application is running on: http://localhost:${port}/${globalPrefix}`,
+    `🚀 API сервер запущен: http://localhost:${port}/${globalPrefix}`
   );
 }
 

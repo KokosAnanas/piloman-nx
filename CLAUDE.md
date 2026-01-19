@@ -1,100 +1,100 @@
-# Разработка приложения piloman.ru (Nx + Angular 21 + NestJS + MongoDB)
+# CLAUDE.md
 
-Ты — мой технический ментор и архитектор (**Angular 21 + NestJS + Nx-monorepo + MongoDB + развёртывание в Yandex Cloud**).  
-Я у тебя учусь. Ты также хорошо разбираешься в **Неразрушающем контроле (НК) сварных соединений**.  
-Разработка ведётся на **Windows в WebStorm**.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
----
+## Проект
 
-## 1) Задача проекта
+**piloman.ru** — веб-приложение для специалистов неразрушающего контроля (НК) сварных соединений. Позволяет оформлять документы/заключения, вести реестры и протоколы.
 
-Помоги спроектировать и разработать веб-приложение **piloman.ru** (Nx monorepo) для специалистов НК, чтобы:
+Общение ведётся только на **русском языке**. В коде пиши пояснительные комментарии со ссылками на официальную документацию.
 
-- быстро оформлять производственные **документы/заключения**;
-- вести **реестры**, **протоколы** и **отчётность**;
-- обеспечить удобную повседневную работу **дефектоскопистов** и **инженеров**.
+## Команды
 
----
+```bash
+# Запуск (API + Web параллельно)
+pnpm run start
 
-## 2) Технологический стек
+# Запуск по отдельности
+pnpm nx serve api          # API: http://localhost:3333/api
+pnpm nx serve web          # Web: http://localhost:4200
 
-### Frontend
-- **Angular 21**
-- Standalone-компоненты
-- Vite builder
-- TypeScript
-- **Angular Signals + Signals Store (предпочтительно)**
-- RxJS (для асинхронных потоков/интеграций)
-- PrimeNG 21, TailwindCSS, PrimeIcons
+# Сборка
+pnpm nx build api
+pnpm nx build web
 
-### Backend
-- **NestJS (REST)**
+# Линтинг
+pnpm nx lint api
+pnpm nx lint web
 
-### Database
-- **MongoDB + Mongoose** (хранение всех документов и связанной информации)
+# Тесты
+pnpm nx test api
+pnpm nx test web
 
-### Infra / Deploy
-- Docker, Docker Compose, Nginx
-- Yandex Cloud: VM, сети, security groups, домен `piloman.ru`, SSL
+# MongoDB (Docker)
+docker compose up -d       # Запуск
+docker compose down        # Остановка
+```
 
-### Прочее
-- pnpm
-- JWT-аутентификация
-- ролевые права, аккаунт пользователя
-- платёжный шлюз РФ для платной версии
+## Стек
 
----
+- **Frontend:** Angular 21 (standalone, Vite), PrimeNG 21, TailwindCSS, Signals
+- **Backend:** NestJS 11 (REST), Mongoose
+- **Database:** MongoDB
+- **Package manager:** pnpm
+- **Monorepo:** Nx 22
 
-## 3) Архитектура монорепозитория (Nx)
+## Архитектура (Nx libs per domain)
 
-Используем **Nx libs per domain** и чёткие границы модулей.
+```
+apps/
+  web/              # Angular frontend (только wiring, без бизнес-логики)
+  api/              # NestJS backend (только wiring + domain modules)
 
-### Apps
-- `apps/web` — Angular frontend
-- `apps/api` — NestJS backend
+libs/
+  <domain>/         # Доменные библиотеки (например: welds, documents, registry)
+    models/         # Типы, интерфейсы, DTO
+    data-access/    # Angular HTTP клиенты (WeldsApiService)
+    feature-*/      # Страницы/компоненты (WeldsComponent)
+    store/          # Signals Store (состояние)
+    ui/             # Доменные UI компоненты
+  shared/           # Общие утилиты, типы (НЕ импортирует доменные либы)
+  core/             # Auth, guards, interceptors, layout
+```
 
-### Libs (примерная структура)
-- `libs/shared/*` — общее (не доменное): UI-обёртки, утилиты, типы, конфиги, инфраструктурные адаптеры, общие компоненты/директивы/пайпы
-- `libs/core/*` — кросс-срезовые вещи уровня приложения: auth, roles, layout/shell, api clients, environment, guards/interceptors
-- `libs/<domain>/*` — доменные фичи (пример: `libs/ndt/*`, `libs/documents/*`, `libs/registry/*` и т.п.)
-    - `data-access` — API клиенты, репозитории, запросы
-    - `feature-*` — страницы/фичи
-    - `ui` — доменные компоненты
-    - `models` — типы/DTO домена
-    - `store` — **Signals Store**
+## Правила модульности
 
----
+1. **apps/** не содержит бизнес-логики — только composition/root wiring
+2. **libs/shared/** не импортирует доменные либы и apps (зависимости только "вниз")
+3. Доменные либы могут зависеть от shared и core, но НЕ друг от друга напрямую
+4. Импорты только через публичные API (`index.ts`), без deep-imports
+5. Состояние — через **Signals Store**, RxJS только для асинхронных потоков
 
-## 4) Правила модульности (обязательные)
+## Path aliases (tsconfig.base.json)
 
-- `apps/*` **не содержит** бизнес-логики: только composition/root wiring.
-- Доменные фичи и бизнес-логика — в `libs/<domain>/*`.
-- `libs/shared/*` **не импортирует** доменные либы и `apps/*` (только “вниз”).
-- Доменные либы могут зависеть от `shared/*` и `core/*`, но **не друг от друга напрямую** без явной “public API” и архитектурного решения.
-- Store/State:
-    - состояние фич — через **Signals Store** в `libs/<domain>/store` (или `feature-*/store`), минимум глобального состояния;
-    - `RxJS` — для асинхронщины/стримов, но **состояние хранится в signals**.
-- Всегда соблюдаем границы импортов и настраиваем Nx `module-boundaries` (eslint) под эти правила.
+```
+@piloman/welds/models        → libs/welds/models/src/index.ts
+@piloman/welds/data-access   → libs/welds/data-access/src/index.ts
+@piloman/welds/feature-welds → libs/welds/feature-welds/src/index.ts
+```
 
----
+## Backend: добавление нового домена
 
-## 5) Формат ответов и Стиль работы
+1. Создать модуль в `apps/api/src/app/<domain>/`
+2. Структура: `schemas/`, `dto/`, `*.module.ts`, `*.controller.ts`, `*.service.ts`
+3. Mongoose schema с `toJSON: { virtuals: true, transform }` для преобразования `_id` → `id`
+4. Импортировать модуль в `AppModule`
 
-1. Сначала кратко объясняй: **что** делаем и **зачем** именно в контексте НК (документы/реестры/отчётность).
-2. Общение ведётся на русском языке
-3. Обязательно давай **ссылки на официальную документацию** по соответствующим темам.
-4. Пиши больше пояснительные комментарии в коде и ссылки на официальную документацию (официальные источники) в комментариях
-5. Если всё хорошо — предлагаешь логичный следующий шаг (какой модуль/функционал реализовать или улучшить дальше).
+## Frontend: добавление нового домена
 
----
+1. Создать библиотеки в `libs/<domain>/`:
+   - `models/` — типы и DTO
+   - `data-access/` — Angular сервис с HttpClient
+   - `feature-<name>/` — standalone компонент
+2. Добавить path aliases в `tsconfig.base.json`
+3. Добавить route в `apps/web/src/app/app.routes.ts` (lazy loading)
 
-## 6) Если есть несколько вариантов реализации
+## Конфигурация
 
-Если есть разные варианты (подход, архитектура, библиотека, платёжный провайдер) — сравни их кратко, укажи плюсы/минусы и **порекомендуй** один вариант, наиболее подходящий для моего сценария:
-
-- НК на объектах Газпрома
-- документооборот
-- расширяемость
-- удобство поддержки
-- стабильный продакшен-деплой в Yandex Cloud
-/
+- `.env` — переменные окружения (MONGODB_URI, PORT)
+- `apps/web/proxy.conf.json` — proxy для API в dev режиме
+- `docker-compose.yml` — MongoDB для локальной разработки
