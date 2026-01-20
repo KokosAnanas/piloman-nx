@@ -72,10 +72,42 @@ libs/
 ## Path aliases (tsconfig.base.json)
 
 ```
+# Доменные библиотеки
 @piloman/welds/models        → libs/welds/models/src/index.ts
 @piloman/welds/data-access   → libs/welds/data-access/src/index.ts
 @piloman/welds/feature-welds → libs/welds/feature-welds/src/index.ts
+
+# Core библиотеки
+@piloman/core/theme          → libs/core/theme/src/index.ts
+@piloman/core/layout         → libs/core/layout/src/index.ts
+
+# Shared библиотеки
+@piloman/shared/ui           → libs/shared/ui/src/index.ts
 ```
+
+## Theming и Layout
+
+Система темизации основана на **PrimeNG v21 Styled Mode**:
+
+- **ThemeService** (`@piloman/core/theme`) — управление темой (preset, primary, surface, darkMode)
+- **LayoutComponent** (`@piloman/core/layout`) — shell приложения (topbar, sidebar, footer)
+- **ConfiguratorComponent** — UI для настройки темы
+
+Подробная документация: `docs/THEMING.md`
+
+### Пресеты
+- Aura (дефолт), Lara, Nora
+
+### Режимы меню
+- **static** — sidebar постоянно виден на desktop
+- **overlay** — sidebar выезжает поверх контента
+
+### Dark Mode
+- Управляется CSS классом `.app-dark` на `<html>`
+- Настраивается через `darkModeSelector` в `providePrimeNG()`
+
+### Persistence
+Настройки темы сохраняются в `localStorage` под ключом `piloman-theme-config`
 
 ## Backend: добавление нового домена
 

@@ -20,6 +20,7 @@ import { providePrimeNG } from 'primeng/config';
 import Aura from '@primeuix/themes/aura';
 
 import { appRoutes } from './app.routes';
+import { DARK_MODE_CLASS } from '@piloman/core/theme';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -49,7 +50,10 @@ export const appConfig: ApplicationConfig = {
 
     /**
      * PrimeNG v21 Configuration
-     * Aura — современная тема PrimeNG
+     * Aura — дефолтная тема (можно менять через ThemeService)
+     *
+     * darkModeSelector — CSS класс для переключения тёмной темы.
+     * Класс '.app-dark' добавляется на document.documentElement через ThemeService.
      *
      * @see https://primeng.org/theming
      * @see https://primeng.org/configuration
@@ -57,6 +61,9 @@ export const appConfig: ApplicationConfig = {
     providePrimeNG({
       theme: {
         preset: Aura,
+        options: {
+          darkModeSelector: `.${DARK_MODE_CLASS}`,
+        },
       },
     }),
   ],

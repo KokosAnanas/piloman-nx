@@ -24,10 +24,90 @@
  * @see https://primeng.org/theming — Theming
  */
 
+/**
+ * CSS переменные для layout.
+ * Используют дизайн-токены PrimeNG (--p-*).
+ *
+ * Light mode (дефолт)
+ */
+:root {
+  /* Фон приложения */
+  --surface-ground: var(--p-surface-100);
+  --surface-section: var(--p-surface-0);
+
+  /* Контент */
+  --surface-card: var(--p-content-background);
+  --surface-overlay: var(--p-overlay-background);
+  --surface-border: var(--p-content-border-color);
+  --surface-hover: var(--p-content-hover-background);
+
+  /* Текст */
+  --text-color: var(--p-text-color);
+  --text-color-secondary: var(--p-text-muted-color);
+
+  /* Скругления */
+  --border-radius: var(--p-content-border-radius);
+
+  /* Анимации */
+  --transition-duration: 0.2s;
+}
+
+/**
+ * Dark mode
+ * Активируется добавлением класса .app-dark на <html>
+ */
+:root.app-dark {
+  --surface-ground: var(--p-surface-950);
+  --surface-section: var(--p-surface-900);
+}
+
 /* Глобальные стили */
+html {
+  font-size: 14px;
+}
+
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
-    Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  font-family: var(--p-font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
+    Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif);
   margin: 0;
   padding: 0;
+  background-color: var(--surface-ground);
+  color: var(--text-color);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Плавные переходы для темы */
+body,
+.layout-wrapper,
+.layout-topbar,
+.layout-sidebar,
+.layout-main-container {
+  transition: background-color var(--transition-duration),
+              color var(--transition-duration),
+              border-color var(--transition-duration);
+}
+
+/* Скроллбар для Webkit браузеров */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--surface-ground);
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--surface-border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--text-color-secondary);
+}
+
+/* Утилитарные классы */
+.w-full {
+  width: 100%;
 }

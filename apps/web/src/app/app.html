@@ -1,2 +1,9 @@
-<!-- Router outlet для отображения страниц приложения -->
-<router-outlet></router-outlet>
+<!--
+  Layout shell приложения.
+  Включает: topbar, sidebar с меню, content area, footer и configurator.
+
+  menuItems - элементы навигационного меню, определены в app.ts
+-->
+<piloman-layout [menuItems]="menuItems">
+  <router-outlet></router-outlet>
+</piloman-layout>

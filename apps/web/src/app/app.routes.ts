@@ -2,6 +2,7 @@
  * Маршруты приложения piloman.ru
  *
  * Используем lazy loading для загрузки feature-модулей по требованию.
+ * Все маршруты обёрнуты в LayoutComponent для единого оформления.
  *
  * @see https://angular.dev/guide/routing — Angular Routing
  * @see https://angular.dev/guide/routing/lazy-loading — Lazy Loading
