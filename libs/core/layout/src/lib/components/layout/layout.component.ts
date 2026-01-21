@@ -80,11 +80,15 @@ import { ConfiguratorComponent } from '../configurator/configurator.component';
       padding-left: 2rem;
       padding-right: 2rem;
       transition: margin-left 0.3s ease;
+      /* min-w-0: предотвращает раздувание контента — горизонтальный скролл остаётся внутри контентной области */
+      min-width: 0;
     }
 
     .layout-main {
       flex: 1;
       padding: 1rem 0;
+      /* min-w-0: предотвращает раздувание контента flex-child при широком содержимом */
+      min-width: 0;
     }
 
     /* Static mode - sidebar виден, контент сдвинут */

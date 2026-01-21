@@ -63,6 +63,17 @@ export const appConfig: ApplicationConfig = {
         preset: Aura,
         options: {
           darkModeSelector: `.${DARK_MODE_CLASS}`,
+          /**
+           * CSS Layer для PrimeNG — обеспечивает правильный приоритет стилей.
+           * Порядок слоёв: tailwind-base → primeng → tailwind-utilities
+           * Это позволяет Tailwind utilities переопределять стили PrimeNG без !important.
+           *
+           * @see https://primeng.org/theming#csslayer
+           */
+          cssLayer: {
+            name: 'primeng',
+            order: 'tailwind-base, primeng, tailwind-utilities',
+          },
         },
       },
     }),

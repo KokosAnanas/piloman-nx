@@ -2,119 +2,244 @@
  * WeldsComponent — страница "Реестр сварных соединений"
  *
  * Отображает таблицу (PrimeNG p-table) со списком сварных соединений.
- * Данные загружаются через WeldsApiService.
+ * Поддерживает inline-добавление новых стыков прямо в таблице.
+ * Поддерживает Column Toggle для управления видимостью колонок.
  *
  * @see https://primeng.org/table — PrimeNG Table
+ * @see https://primeng.org/table#column-toggle — Column Toggle
  * @see https://angular.dev/guide/signals — Angular Signals
+ * @see https://angular.dev/guide/forms/reactive-forms — Reactive Forms
  */
 
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import {
+  FormBuilder,
+  FormGroup,
+  FormsModule,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
 
-// PrimeNG v21 Table
-// @see https://primeng.org/table — PrimeNG Table
+// PrimeNG v21 компоненты
+// @see https://primeng.org/
 import { TableModule } from 'primeng/table';
+import { ButtonModule } from 'primeng/button';
+import { InputTextModule } from 'primeng/inputtext';
+import { InputNumberModule } from 'primeng/inputnumber';
+import { SelectModule } from 'primeng/select';
+import { DatePickerModule } from 'primeng/datepicker';
+import { MultiSelectModule } from 'primeng/multiselect';
+import { ToastModule } from 'primeng/toast';
+import { MessageService, SelectItem } from 'primeng/api';
 
 // Data Access — API сервис
 import { WeldsApiService } from '@piloman/welds/data-access';
 
 // Типы из models
-import type { Weld } from '@piloman/welds/models';
+import type { Weld, CreateWeldDto } from '@piloman/welds/models';
+
+/**
+ * Определение колонки таблицы для Column Toggle
+ * widthClass — Tailwind класс фиксированной ширины (например, 'w-[120px]')
+ * @see https://primeng.org/table#column-toggle
+ */
+interface TableColumn {
+  field: string;
+  header: string;
+  widthClass: string;
+}
+
+/**
+ * Тип строки таблицы: либо реальный Weld, либо draft (черновик для добавления)
+ */
+type TableRow = Weld | { _isDraft: true };
+
+/**
+ * Колонки, скрытые по умолчанию
+ */
+const HIDDEN_BY_DEFAULT = ['weldDate', 'weldingProcess', 'joint', 'weldStatus', 'notes'];
 
 /**
  * Standalone компонент — страница реестра сварных соединений
  *
  * Использует:
- * - Angular Signals для состояния (welds, loading)
+ * - Angular Signals для состояния (welds, loading, isAdding, isSaving)
  * - PrimeNG Table для отображения данных
- * - WeldsApiService для загрузки данных с API
+ * - PrimeNG Form Controls для inline-формы добавления
+ * - PrimeNG MultiSelect для Column Toggle
+ * - WeldsApiService для загрузки/сохранения данных
+ * - MessageService для Toast уведомлений
  */
 @Component({
   selector: 'piloman-welds',
   standalone: true,
-  imports: [CommonModule, TableModule],
-  template: `
-    <div class="p-4">
-      <h1 class="text-2xl font-bold mb-4">Реестр сварных соединений</h1>
-
-      <!-- Индикатор загрузки -->
-      @if (loading()) {
-        <div class="text-center p-4">Загрузка данных...</div>
-      }
-
-      <!-- Таблица PrimeNG -->
-      <!-- @see https://primeng.org/table#basic -->
-      <p-table
-        [value]="welds()"
-        [loading]="loading()"
-        [paginator]="true"
-        [rows]="10"
-        [rowsPerPageOptions]="[5, 10, 25, 50]"
-        styleClass="p-datatable-striped"
-      >
-        <ng-template pTemplate="header">
-          <tr>
-            <th>Номер стыка</th>
-            <th>D, мм</th>
-            <th>S1, мм</th>
-            <th>S2, мм</th>
-            <th>Уровень качества</th>
-            <th>Дата сварки</th>
-            <th>Способ сварки</th>
-            <th>Тип соединения</th>
-            <th>Методы НК</th>
-            <th>Заключение</th>
-            <th>Статус</th>
-            <th>Примечание</th>
-          </tr>
-        </ng-template>
-
-        <ng-template pTemplate="body" let-weld>
-          <tr>
-            <td>{{ weld.weldNumber }}</td>
-            <td>{{ weld.diameter }}</td>
-            <td>{{ weld.thickness1 }}</td>
-            <td>{{ weld.thickness2 || '-' }}</td>
-            <td>{{ weld.qualityLevel }}</td>
-            <td>{{ weld.weldDate || '-' }}</td>
-            <td>{{ formatWeldingProcess(weld.weldingProcess) }}</td>
-            <td>{{ formatJoint(weld.joint) }}</td>
-            <td>{{ formatTestMethods(weld.testMethods) }}</td>
-            <td>{{ formatConclusion(weld.conclusion) }}</td>
-            <td>{{ formatStatus(weld.weldStatus) }}</td>
-            <td>{{ weld.notes || '-' }}</td>
-          </tr>
-        </ng-template>
-
-        <!-- Пустая таблица -->
-        <ng-template pTemplate="emptymessage">
-          <tr>
-            <td colspan="12" class="text-center p-4">
-              Нет данных. Добавьте сварные соединения через API.
-            </td>
-          </tr>
-        </ng-template>
-      </p-table>
-    </div>
-  `,
+  imports: [
+    CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
+    TableModule,
+    ButtonModule,
+    InputTextModule,
+    InputNumberModule,
+    SelectModule,
+    DatePickerModule,
+    MultiSelectModule,
+    ToastModule,
+  ],
+  providers: [MessageService],
+  templateUrl: './welds.component.html',
 })
 export class WeldsComponent implements OnInit {
   /**
-   * WeldsApiService для загрузки данных
-   * Используем inject() вместо constructor injection
+   * WeldsApiService для загрузки/сохранения данных
    */
   private readonly weldsApi = inject(WeldsApiService);
 
   /**
+   * FormBuilder для создания реактивных форм
+   * @see https://angular.dev/guide/forms/reactive-forms
+   */
+  private readonly fb = inject(FormBuilder);
+
+  /**
+   * MessageService для Toast уведомлений
+   * @see https://primeng.org/toast
+   */
+  private readonly messageService = inject(MessageService);
+
+  /**
    * Список сварных соединений (Angular Signal)
-   * @see https://angular.dev/guide/signals
    */
   welds = signal<Weld[]>([]);
 
   /**
-   * Флаг загрузки (Angular Signal)
+   * Флаг загрузки данных
    */
   loading = signal<boolean>(false);
+
+  /**
+   * Флаг режима добавления (показывает inline-форму)
+   */
+  isAdding = signal<boolean>(false);
+
+  /**
+   * Флаг сохранения (блокирует форму во время запроса)
+   */
+  isSaving = signal<boolean>(false);
+
+  /**
+   * Данные для таблицы: если isAdding — добавляем draft строку в начало
+   * Computed signal для реактивного обновления
+   */
+  tableData = computed<TableRow[]>(() => {
+    const welds = this.welds();
+    if (this.isAdding()) {
+      return [{ _isDraft: true } as TableRow, ...welds];
+    }
+    return welds;
+  });
+
+  /**
+   * Все доступные колонки таблицы
+   * @see https://primeng.org/table#column-toggle
+   */
+  readonly cols: TableColumn[] = [
+    { field: 'weldNumber', header: 'Номер стыка', widthClass: 'w-[140px] min-w-[140px] max-w-[140px]' },
+    { field: 'diameter', header: 'D, мм', widthClass: 'w-[80px] min-w-[80px] max-w-[80px]' },
+    { field: 'thickness1', header: 'S1, мм', widthClass: 'w-[75px] min-w-[75px] max-w-[75px]' },
+    { field: 'thickness2', header: 'S2, мм', widthClass: 'w-[75px] min-w-[75px] max-w-[75px]' },
+    { field: 'qualityLevel', header: 'Уровень качества', widthClass: 'w-[60px] min-w-[60px] max-w-[60px]' },
+    { field: 'weldDate', header: 'Дата сварки', widthClass: 'w-[120px] min-w-[120px] max-w-[120px]' },
+    { field: 'weldingProcess', header: 'Способ сварки', widthClass: 'w-[130px] min-w-[130px] max-w-[130px]' },
+    { field: 'joint', header: 'Тип соединения', widthClass: 'w-[130px] min-w-[130px] max-w-[130px]' },
+    { field: 'testMethods', header: 'Методы НК', widthClass: 'w-[150px] min-w-[150px] max-w-[150px]' },
+    { field: 'conclusion', header: 'Заключение', widthClass: 'w-[110px] min-w-[110px] max-w-[110px]' },
+    { field: 'weldStatus', header: 'Статус', widthClass: 'w-[100px] min-w-[100px] max-w-[100px]' },
+    { field: 'notes', header: 'Примечание', widthClass: 'w-[150px] min-w-[150px] max-w-[150px]' },
+  ];
+
+  /**
+   * Выбранные (видимые) колонки
+   * По умолчанию скрыты: Дата сварки, Способ сварки, Тип соединения, Статус
+   */
+  selectedColumns: TableColumn[] = this.cols.filter(
+    (col) => !HIDDEN_BY_DEFAULT.includes(col.field)
+  );
+
+  /**
+   * Форма для добавления нового стыка
+   * Обязательные поля: weldNumber, diameter, thickness1, qualityLevel
+   */
+  newRowForm: FormGroup = this.fb.group({
+    weldNumber: ['', [Validators.required]],
+    diameter: [null, [Validators.required, Validators.min(1)]],
+    thickness1: [null, [Validators.required, Validators.min(0.1)]],
+    thickness2: [null],
+    qualityLevel: ['B', [Validators.required]],
+    weldDate: [null],
+    weldingProcess: ['SMAW_GMAW'],
+    joint: ['BUTT'],
+    testMethods: [[]],
+    conclusion: [null],
+    weldStatus: ['draft'],
+    notes: [''],
+  });
+
+  /**
+   * Опции для выпадающего списка "Уровень качества"
+   */
+  readonly qualityLevelOptions: SelectItem[] = [
+    { label: 'A — Высший', value: 'A' },
+    { label: 'B — Средний', value: 'B' },
+    { label: 'C — Базовый', value: 'C' },
+  ];
+
+  /**
+   * Опции для выпадающего списка "Способ сварки"
+   */
+  readonly weldingProcessOptions: SelectItem[] = [
+    { label: 'РД/ПАС', value: 'SMAW_GMAW' },
+    { label: 'АрД', value: 'GTAW' },
+    { label: 'АФ', value: 'SAW' },
+  ];
+
+  /**
+   * Опции для выпадающего списка "Тип соединения"
+   */
+  readonly jointOptions: SelectItem[] = [
+    { label: 'Стыковое', value: 'BUTT' },
+    { label: 'Угловое/Нахл.', value: 'FILLET_LAP' },
+  ];
+
+  /**
+   * Опции для мультиселекта "Методы НК"
+   */
+  readonly testMethodsOptions: SelectItem[] = [
+    { label: 'ВИК', value: 'VT' },
+    { label: 'УЗК', value: 'UT' },
+    { label: 'РК', value: 'RT' },
+    { label: 'МК', value: 'MT' },
+    { label: 'ПВК', value: 'PT' },
+  ];
+
+  /**
+   * Опции для выпадающего списка "Заключение"
+   */
+  readonly conclusionOptions: SelectItem[] = [
+    { label: 'Годен', value: 'OK' },
+    { label: 'Ремонт', value: 'REPAIR' },
+    { label: 'Вырезать', value: 'CUT' },
+  ];
+
+  /**
+   * Опции для выпадающего списка "Статус"
+   */
+  readonly statusOptions: SelectItem[] = [
+    { label: 'Черновик', value: 'draft' },
+    { label: 'В работе', value: 'in_progress' },
+    { label: 'Завершён', value: 'done' },
+  ];
 
   /**
    * Загрузка данных при инициализации компонента
@@ -137,8 +262,185 @@ export class WeldsComponent implements OnInit {
       error: (err) => {
         console.error('Ошибка загрузки данных:', err);
         this.loading.set(false);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Ошибка',
+          detail: 'Не удалось загрузить данные',
+        });
       },
     });
+  }
+
+  /**
+   * Начать добавление нового стыка
+   * Показывает inline-форму в таблице
+   */
+  startAdding(): void {
+    this.isAdding.set(true);
+    this.resetForm();
+  }
+
+  /**
+   * Отмена добавления
+   * Скрывает форму и очищает данные
+   */
+  cancelAdding(): void {
+    this.isAdding.set(false);
+    this.resetForm();
+  }
+
+  /**
+   * Сброс формы к начальным значениям
+   */
+  private resetForm(): void {
+    this.newRowForm.reset({
+      weldNumber: '',
+      diameter: null,
+      thickness1: null,
+      thickness2: null,
+      qualityLevel: 'B',
+      weldDate: null,
+      weldingProcess: 'SMAW_GMAW',
+      joint: 'BUTT',
+      testMethods: [],
+      conclusion: null,
+      weldStatus: 'draft',
+      notes: '',
+    });
+  }
+
+  /**
+   * Проверка валидности поля для отображения ошибки
+   */
+  isFieldInvalid(fieldName: string): boolean {
+    const control = this.newRowForm.get(fieldName);
+    return control ? control.invalid && (control.dirty || control.touched) : false;
+  }
+
+  /**
+   * Форматирование значения ячейки в зависимости от поля
+   */
+  formatCellValue(row: Weld, field: string): string {
+    const value = row[field as keyof Weld];
+
+    switch (field) {
+      case 'weldDate':
+        return this.formatDate(value as string | undefined);
+      case 'weldingProcess':
+        return this.formatWeldingProcess(value as string | undefined);
+      case 'joint':
+        return this.formatJoint(value as string | undefined);
+      case 'testMethods':
+        return this.formatTestMethods(value as string[] | undefined);
+      case 'conclusion':
+        return this.formatConclusion(value as string | undefined);
+      case 'weldStatus':
+        return this.formatStatus(value as string | undefined);
+      case 'thickness2':
+      case 'notes':
+        return value != null && value !== '' ? String(value) : '-';
+      default:
+        return value != null ? String(value) : '-';
+    }
+  }
+
+  /**
+   * Сохранение нового стыка
+   * Выполняет валидацию, отправляет запрос на API
+   */
+  saveWeld(): void {
+    // Пометить все поля как touched для отображения ошибок
+    this.newRowForm.markAllAsTouched();
+
+    if (this.newRowForm.invalid) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Внимание',
+        detail: 'Заполните обязательные поля: Номер стыка, D, S1',
+      });
+      return;
+    }
+
+    this.isSaving.set(true);
+
+    // Формируем DTO для API
+    const formValue = this.newRowForm.value;
+    const dto: CreateWeldDto = {
+      weldNumber: formValue.weldNumber,
+      diameter: formValue.diameter,
+      thickness1: formValue.thickness1,
+      qualityLevel: formValue.qualityLevel,
+    };
+
+    // Добавляем опциональные поля только если они заполнены
+    if (formValue.thickness2 != null) {
+      dto.thickness2 = formValue.thickness2;
+    }
+    if (formValue.weldDate) {
+      // Преобразуем Date в ISO string
+      dto.weldDate = formValue.weldDate instanceof Date
+        ? formValue.weldDate.toISOString().split('T')[0]
+        : formValue.weldDate;
+    }
+    if (formValue.weldingProcess) {
+      dto.weldingProcess = formValue.weldingProcess;
+    }
+    if (formValue.joint) {
+      dto.joint = formValue.joint;
+    }
+    if (formValue.testMethods && formValue.testMethods.length > 0) {
+      dto.testMethods = formValue.testMethods;
+    }
+    if (formValue.conclusion) {
+      dto.conclusion = formValue.conclusion;
+    }
+    if (formValue.weldStatus) {
+      dto.weldStatus = formValue.weldStatus;
+    }
+    if (formValue.notes && formValue.notes.trim()) {
+      dto.notes = formValue.notes.trim();
+    }
+
+    this.weldsApi.create(dto).subscribe({
+      next: (createdWeld) => {
+        // Добавляем созданный стык в начало списка
+        this.welds.update((welds) => [createdWeld, ...welds]);
+        this.isSaving.set(false);
+        this.isAdding.set(false);
+        this.resetForm();
+
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Успешно',
+          detail: `Стык "${createdWeld.weldNumber}" добавлен`,
+        });
+      },
+      error: (err) => {
+        console.error('Ошибка сохранения:', err);
+        this.isSaving.set(false);
+
+        // Показываем ошибку, форма остаётся открытой
+        const errorMessage = err.error?.message || 'Не удалось сохранить данные';
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Ошибка',
+          detail: Array.isArray(errorMessage) ? errorMessage.join(', ') : errorMessage,
+        });
+      },
+    });
+  }
+
+  /**
+   * Форматирование даты для отображения
+   */
+  formatDate(value: string | undefined): string {
+    if (!value) return '-';
+    try {
+      const date = new Date(value);
+      return date.toLocaleDateString('ru-RU');
+    } catch {
+      return value;
+    }
   }
 
   /**

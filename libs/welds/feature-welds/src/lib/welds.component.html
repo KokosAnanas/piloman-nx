@@ -1,0 +1,225 @@
+<div class="p-4">
+  <!-- Toast для уведомлений -->
+  <!-- @see https://primeng.org/toast -->
+  <p-toast />
+
+  <!-- Заголовок + Column Toggle + кнопка добавления -->
+  <div class="flex items-center mb-4">
+    <h1 class="text-2xl font-bold mr-5">Реестр сварных соединений</h1>
+    <div class="flex items-center gap-2">
+      <!-- Column Toggle -->
+      <!-- @see https://primeng.org/table#column-toggle -->
+      <p-multiselect
+        [options]="cols"
+        [(ngModel)]="selectedColumns"
+        optionLabel="header"
+        selectedItemsLabel="Колонки: {0}"
+        placeholder="Выбрать колонки"
+        class="w-54"
+        [maxSelectedLabels]="2"></p-multiselect>
+      <p-button
+        label="Добавить стык"
+        icon="pi pi-plus"
+        [disabled]="isAdding()"
+        (onClick)="startAdding()"
+      />
+    </div>
+  </div>
+
+  <!-- Индикатор загрузки -->
+  @if (loading()) {
+    <div class="text-center p-4">Загрузка данных...</div>
+  }
+
+  <!-- Контейнер таблицы с фиксированной шириной -->
+  <!-- Arbitrary variants для PrimeNG: убираем width:100%, делаем fit-content -->
+  <div class="card-border w-fit max-w-full overflow-hidden">
+    <div class="overflow-x-auto p-5 [&_.p-datatable]:w-fit [&_.p-datatable-table-container]:w-fit [&_.p-datatable-table]:w-fit">
+      <!-- Таблица PrimeNG: table-fixed -->
+      <!-- @see https://primeng.org/table#basic -->
+      <p-table
+        [value]="tableData()"
+        [loading]="loading()"
+        [paginator]="welds().length > 100"
+        [rows]="100"
+        [rowsPerPageOptions]="[50, 100, 150, 200]"
+        tableStyleClass="table-fixed"
+      >
+      <ng-template pTemplate="header">
+        <tr>
+          <!-- Действия — первая колонка -->
+          <th class="w-[80px] min-w-[80px] max-w-[80px] text-center">
+            <div class="min-w-0 w-full">Действия</div>
+          </th>
+          @for (col of selectedColumns; track col.field) {
+            <th [ngClass]="col.widthClass" class="text-center">
+              <div class="min-w-0 w-full">{{ col.header }}</div>
+            </th>
+          }
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-row>
+        <!-- Draft строка (форма добавления) -->
+        @if (row._isDraft) {
+          <tr [formGroup]="newRowForm" class="bg-primary-50">
+            <!-- Действия: Сохранить / Отмена — первая колонка -->
+            <td class="w-[80px] min-w-[80px] max-w-[80px]">
+              <div class="min-w-0 w-full flex gap-1 justify-center">
+                <p-button
+                  icon="pi pi-check"
+                  size="small"
+                  [disabled]="newRowForm.invalid || isSaving()"
+                  [loading]="isSaving()"
+                  (onClick)="saveWeld()"
+                />
+                <p-button
+                  icon="pi pi-times"
+                  size="small"
+                  severity="secondary"
+                  [disabled]="isSaving()"
+                  (onClick)="cancelAdding()"
+                />
+              </div>
+            </td>
+            @for (col of selectedColumns; track col.field) {
+              <td [ngClass]="col.widthClass" class="px-1">
+                <div class="min-w-0 w-full">
+                  @switch (col.field) {
+                    @case ('weldNumber') {
+                      <input
+                        pInputText
+                        formControlName="weldNumber"
+                        placeholder="ШС-001"
+                        class="w-full min-w-0"
+                        [ngClass]="{'ng-invalid ng-dirty': isFieldInvalid('weldNumber')}"
+                      />
+                    }
+                    @case ('diameter') {
+                      <p-inputnumber
+                        formControlName="diameter"
+                        [min]="1"
+                        placeholder="219"
+                        class="w-full min-w-0"
+                        inputStyleClass="w-full min-w-0"
+                        [ngClass]="{'ng-invalid ng-dirty': isFieldInvalid('diameter')}"></p-inputnumber>
+                    }
+                    @case ('thickness1') {
+                      <p-inputnumber
+                        formControlName="thickness1"
+                        [min]="0.1"
+                        [minFractionDigits]="1"
+                        [maxFractionDigits]="2"
+                        placeholder="8"
+                        class="w-full min-w-0"
+                        inputStyleClass="w-full min-w-0"
+                        [ngClass]="{'ng-invalid ng-dirty': isFieldInvalid('thickness1')}"></p-inputnumber>
+                    }
+                    @case ('thickness2') {
+                      <p-inputnumber
+                        formControlName="thickness2"
+                        [min]="0.1"
+                        [minFractionDigits]="1"
+                        [maxFractionDigits]="2"
+                        placeholder="-"
+                        class="w-full min-w-0"
+                        inputStyleClass="w-full min-w-0"></p-inputnumber>
+                    }
+                    @case ('qualityLevel') {
+                      <p-select
+                        formControlName="qualityLevel"
+                        [options]="qualityLevelOptions"
+                        placeholder="Выбрать"
+                        class="w-full min-w-0"
+                      />
+                    }
+                    @case ('weldDate') {
+                      <p-datepicker
+                        formControlName="weldDate"
+                        dateFormat="dd.mm.yy"
+                        placeholder="дд.мм.гггг"
+                        class="w-full min-w-0"></p-datepicker>
+                    }
+                    @case ('weldingProcess') {
+                      <p-select
+                        formControlName="weldingProcess"
+                        [options]="weldingProcessOptions"
+                        placeholder="Выбрать"
+                        class="w-full min-w-0"
+                      />
+                    }
+                    @case ('joint') {
+                      <p-select
+                        formControlName="joint"
+                        [options]="jointOptions"
+                        placeholder="Выбрать"
+                        class="w-full min-w-0"
+                      />
+                    }
+                    @case ('testMethods') {
+                      <p-multiselect
+                        formControlName="testMethods"
+                        [options]="testMethodsOptions"
+                        placeholder="Выбрать"
+                        class="w-full min-w-0"></p-multiselect>
+                    }
+                    @case ('conclusion') {
+                      <p-select
+                        formControlName="conclusion"
+                        [options]="conclusionOptions"
+                        placeholder="Выбрать"
+                        class="w-full min-w-0"
+                      />
+                    }
+                    @case ('weldStatus') {
+                      <p-select
+                        formControlName="weldStatus"
+                        [options]="statusOptions"
+                        placeholder="Выбрать"
+                        class="w-full min-w-0"
+                      />
+                    }
+                    @case ('notes') {
+                      <input
+                        pInputText
+                        formControlName="notes"
+                        placeholder="Примечание"
+                        class="w-full min-w-0"
+                      />
+                    }
+                  }
+                </div>
+              </td>
+            }
+          </tr>
+        } @else {
+          <!-- Обычная строка данных -->
+          <tr>
+            <!-- Действия — первая колонка -->
+            <td class="w-[80px] min-w-[80px] max-w-[80px]">
+              <div class="min-w-0 w-full text-center">-</div>
+            </td>
+            @for (col of selectedColumns; track col.field) {
+              <td [ngClass]="col.widthClass">
+                <!-- line-clamp-2: перенос до 2 строк, потом троеточие -->
+                <div class="min-w-0 w-full overflow-hidden line-clamp-2 break-words text-center">
+                  {{ formatCellValue(row, col.field) }}
+                </div>
+              </td>
+            }
+          </tr>
+        }
+      </ng-template>
+
+      <!-- Пустая таблица (когда нет данных и не добавляем) -->
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td [attr.colspan]="selectedColumns.length + 1" class="text-center p-4">
+            Нет данных. Нажмите «Добавить стык» для создания записи.
+          </td>
+        </tr>
+      </ng-template>
+      </p-table>
+    </div>
+  </div>
+</div>

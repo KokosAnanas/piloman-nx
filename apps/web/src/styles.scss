@@ -5,10 +5,28 @@
  * @see https://primeng.org/installation — PrimeNG v21
  */
 
-/* TailwindCSS */
-@tailwind base;
+/**
+ * CSS Layers для правильного приоритета стилей.
+ * Порядок: tailwind-base → primeng → tailwind-utilities
+ * Tailwind utilities имеют наивысший приоритет и переопределяют PrimeNG без !important.
+ *
+ * @see https://primeng.org/theming#csslayer
+ * @see https://tailwindcss.com/docs/adding-custom-styles#using-css-and-layer
+ */
+@layer tailwind-base, primeng, tailwind-utilities;
+
+/* TailwindCSS base layer */
+@layer tailwind-base {
+  @tailwind base;
+}
+
+/* TailwindCSS components */
 @tailwind components;
-@tailwind utilities;
+
+/* TailwindCSS utilities layer (высший приоритет) */
+@layer tailwind-utilities {
+  @tailwind utilities;
+}
 
 /**
  * PrimeIcons
@@ -107,7 +125,54 @@ body,
   background-color: var(--text-color-secondary);
 }
 
-/* Утилитарные классы */
-.w-full {
-  width: 100%;
+/**
+ * Карточка в стиле PrimeNG (Sakai-like)
+ * Использует CSS переменные темы для консистентности с любым пресетом
+ */
+.card-border {
+  border: 1px solid var(--surface-border);
+  border-radius: var(--border-radius);
+  background-color: var(--surface-card);
+  overflow: hidden;
 }
+
+/**
+ * Глобальные переопределения PrimeNG компонентов
+ * Используем @layer primeng для корректного приоритета стилей
+ * (Tailwind utilities > primeng > tailwind-base)
+ *
+ * Убираем min-width у form controls для корректной работы в table-fixed
+ * @see https://primeng.org/theming#csslayer
+ */
+@layer primeng {
+  /* p-select: убираем min-width для работы в фиксированных колонках */
+  p-select .p-select {
+    min-width: 0;
+    width: 100%;
+  }
+
+  /* p-multiselect: убираем min-width */
+  p-multiselect .p-multiselect {
+    min-width: 0;
+    width: 100%;
+  }
+
+  /* p-datepicker: убираем min-width */
+  p-datepicker .p-datepicker {
+    min-width: 0;
+    width: 100%;
+  }
+
+  /* p-inputnumber: убираем min-width */
+  p-inputnumber .p-inputnumber {
+    min-width: 0;
+    width: 100%;
+  }
+
+  /* p-inputnumber input: убираем min-width */
+  p-inputnumber .p-inputnumber-input {
+    min-width: 0;
+    width: 100%;
+  }
+}
+
