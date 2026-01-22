@@ -1,0 +1,28 @@
+<div class="layout-wrapper" [ngClass]="layoutService.containerClass()">
+  <!-- Topbar -->
+  <piloman-topbar />
+
+  <!-- Sidebar -->
+  <piloman-sidebar [menuItems]="menuItems()" />
+
+  <!-- Main content -->
+  <div class="layout-main-container">
+    <div class="layout-main">
+      <ng-content></ng-content>
+    </div>
+
+    <!-- Footer -->
+    <piloman-footer />
+  </div>
+
+  <!-- Overlay mask (для мобилки и overlay mode) -->
+  @if (layoutService.isSidebarActive()) {
+    <div
+      class="layout-mask"
+      (click)="layoutService.hideOverlayMenu()"
+    ></div>
+  }
+
+  <!-- Configurator panel -->
+  <piloman-configurator />
+</div>

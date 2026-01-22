@@ -31,7 +31,9 @@ import { SelectModule } from 'primeng/select';
 import { DatePickerModule } from 'primeng/datepicker';
 import { MultiSelectModule } from 'primeng/multiselect';
 import { ToastModule } from 'primeng/toast';
-import { MessageService, SelectItem } from 'primeng/api';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { TooltipModule } from 'primeng/tooltip';
+import { MessageService, ConfirmationService, SelectItem } from 'primeng/api';
 
 // Data Access — API сервис
 import { WeldsApiService } from '@piloman/welds/data-access';
@@ -86,8 +88,10 @@ const HIDDEN_BY_DEFAULT = ['weldDate', 'weldingProcess', 'joint', 'weldStatus', 
     DatePickerModule,
     MultiSelectModule,
     ToastModule,
+    ConfirmDialogModule,
+    TooltipModule,
   ],
-  providers: [MessageService],
+  providers: [MessageService, ConfirmationService],
   templateUrl: './welds.component.html',
 })
 export class WeldsComponent implements OnInit {
@@ -109,6 +113,12 @@ export class WeldsComponent implements OnInit {
   private readonly messageService = inject(MessageService);
 
   /**
+   * ConfirmationService для диалогов подтверждения
+   * @see https://primeng.org/confirmdialog
+   */
+  private readonly confirmationService = inject(ConfirmationService);
+
+  /**
    * Список сварных соединений (Angular Signal)
    */
   welds = signal<Weld[]>([]);
@@ -127,6 +137,11 @@ export class WeldsComponent implements OnInit {
    * Флаг сохранения (блокирует форму во время запроса)
    */
   isSaving = signal<boolean>(false);
+
+  /**
+   * ID удаляемого стыка (для отображения loading состояния на кнопке)
+   */
+  deletingId = signal<string | null>(null);
 
   /**
    * Данные для таблицы: если isAdding — добавляем draft строку в начало
@@ -504,5 +519,63 @@ export class WeldsComponent implements OnInit {
       done: 'Завершён',
     };
     return value ? map[value] || value : '-';
+  }
+
+  /**
+   * Удаление стыка с подтверждением
+   *
+   * Показывает ConfirmDialog, при подтверждении отправляет DELETE запрос.
+   * При успехе удаляет строку из локального списка и показывает toast.
+   *
+   * @param row - строка таблицы (Weld)
+   * @see https://primeng.org/confirmdialog
+   */
+  onDeleteWeld(row: Weld): void {
+    const id = row.id ?? (row as { _id?: string })._id;
+
+    if (!id) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Ошибка',
+        detail: 'Не удалось определить ID стыка',
+      });
+      return;
+    }
+
+    this.confirmationService.confirm({
+      message: 'Удалить стык? Действие необратимо.',
+      header: 'Подтверждение удаления',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Удалить',
+      rejectLabel: 'Отмена',
+      accept: () => {
+        this.deletingId.set(id);
+
+        this.weldsApi.remove(id).subscribe({
+          next: () => {
+            // Удаляем стык из локального списка
+            this.welds.update((welds) => welds.filter((w) => w.id !== id));
+            this.deletingId.set(null);
+
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Успешно',
+              detail: `Стык "${row.weldNumber}" удалён`,
+            });
+          },
+          error: (err) => {
+            console.error('Ошибка удаления:', err);
+            this.deletingId.set(null);
+
+            const errorMessage = err.error?.message || 'Не удалось удалить стык';
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Ошибка',
+              detail: Array.isArray(errorMessage) ? errorMessage.join(', ') : errorMessage,
+            });
+          },
+        });
+      },
+    });
   }
 }

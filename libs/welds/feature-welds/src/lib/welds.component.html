@@ -3,6 +3,10 @@
   <!-- @see https://primeng.org/toast -->
   <p-toast />
 
+  <!-- Диалог подтверждения удаления -->
+  <!-- @see https://primeng.org/confirmdialog -->
+  <p-confirmDialog />
+
   <!-- Заголовок + Column Toggle + кнопка добавления -->
   <div class="flex items-center mb-4">
     <h1 class="text-2xl font-bold mr-5">Реестр сварных соединений</h1>
@@ -34,7 +38,7 @@
   <!-- Контейнер таблицы с фиксированной шириной -->
   <!-- Arbitrary variants для PrimeNG: убираем width:100%, делаем fit-content -->
   <div class="card-border w-fit max-w-full overflow-hidden">
-    <div class="overflow-x-auto p-5 [&_.p-datatable]:w-fit [&_.p-datatable-table-container]:w-fit [&_.p-datatable-table]:w-fit">
+    <div class="overflow-x-auto p-8 [&_.p-datatable]:w-fit [&_.p-datatable-table-container]:w-fit [&_.p-datatable-table]:w-fit">
       <!-- Таблица PrimeNG: table-fixed -->
       <!-- @see https://primeng.org/table#basic -->
       <p-table
@@ -49,7 +53,7 @@
         <tr>
           <!-- Действия — первая колонка -->
           <th class="w-[80px] min-w-[80px] max-w-[80px] text-center">
-            <div class="min-w-0 w-full">Действия</div>
+            <div class="min-w-0 w-full"></div>
           </th>
           @for (col of selectedColumns; track col.field) {
             <th [ngClass]="col.widthClass" class="text-center">
@@ -197,7 +201,18 @@
           <tr>
             <!-- Действия — первая колонка -->
             <td class="w-[80px] min-w-[80px] max-w-[80px]">
-              <div class="min-w-0 w-full text-center">-</div>
+              <div class="min-w-0 w-full flex items-center justify-center">
+                <!-- Кнопка удаления стыка -->
+                <!-- @see https://primeng.org/button -->
+                <p-button
+                  icon="pi pi-trash"
+                  size="small"
+                  severity="secondary"
+                  [disabled]="deletingId() === (row.id ?? row._id) || isSaving() || isAdding()"
+                  [loading]="deletingId() === (row.id ?? row._id)"
+                  (onClick)="onDeleteWeld(row)"
+                />
+              </div>
             </td>
             @for (col of selectedColumns; track col.field) {
               <td [ngClass]="col.widthClass">
