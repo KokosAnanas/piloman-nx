@@ -1,0 +1,88 @@
+<!-- Виджет параметров стыка -->
+<!-- @see https://primeng.org/card -->
+<p-card class="w-full">
+  <ng-template pTemplate="header">
+    <div class="flex items-center gap-2 px-4 pt-4">
+      <i class="pi pi-cog text-primary text-xl"></i>
+      <span class="text-lg font-semibold">Параметры стыка</span>
+    </div>
+  </ng-template>
+
+  @if (weld) {
+    <div class="flex flex-col gap-3">
+      <!-- Номер стыка -->
+      <div class="flex justify-between items-center py-2 border-b border-surface-200 dark:border-surface-700">
+        <span class="text-surface-600 dark:text-surface-400">Номер стыка</span>
+        <span class="font-medium">{{ weld.weldNumber }}</span>
+      </div>
+
+      <!-- Диаметр -->
+      <div class="flex justify-between items-center py-2 border-b border-surface-200 dark:border-surface-700">
+        <span class="text-surface-600 dark:text-surface-400">Диаметр (D), мм</span>
+        <span class="font-medium">{{ weld.diameter }}</span>
+      </div>
+
+      <!-- Толщина 1 -->
+      <div class="flex justify-between items-center py-2 border-b border-surface-200 dark:border-surface-700">
+        <span class="text-surface-600 dark:text-surface-400">Толщина (S1), мм</span>
+        <span class="font-medium">{{ weld.thickness1 }}</span>
+      </div>
+
+      <!-- Толщина 2 (если есть) -->
+      @if (weld.thickness2) {
+        <div class="flex justify-between items-center py-2 border-b border-surface-200 dark:border-surface-700">
+          <span class="text-surface-600 dark:text-surface-400">Толщина (S2), мм</span>
+          <span class="font-medium">{{ weld.thickness2 }}</span>
+        </div>
+      }
+
+      <!-- Уровень качества -->
+      <div class="flex justify-between items-center py-2 border-b border-surface-200 dark:border-surface-700">
+        <span class="text-surface-600 dark:text-surface-400">Уровень качества</span>
+        <span class="font-medium">{{ formatQualityLevel(weld.qualityLevel) }}</span>
+      </div>
+
+      <!-- Способ сварки -->
+      @if (weld.weldingProcess) {
+        <div class="flex justify-between items-center py-2 border-b border-surface-200 dark:border-surface-700">
+          <span class="text-surface-600 dark:text-surface-400">Способ сварки</span>
+          <span class="font-medium">{{ formatWeldingProcess(weld.weldingProcess) }}</span>
+        </div>
+      }
+
+      <!-- Тип соединения -->
+      @if (weld.joint) {
+        <div class="flex justify-between items-center py-2 border-b border-surface-200 dark:border-surface-700">
+          <span class="text-surface-600 dark:text-surface-400">Тип соединения</span>
+          <span class="font-medium">{{ formatJoint(weld.joint) }}</span>
+        </div>
+      }
+
+      <!-- Дата сварки -->
+      @if (weld.weldDate) {
+        <div class="flex justify-between items-center py-2 border-b border-surface-200 dark:border-surface-700">
+          <span class="text-surface-600 dark:text-surface-400">Дата сварки</span>
+          <span class="font-medium">{{ formatDate(weld.weldDate) }}</span>
+        </div>
+      }
+
+      <!-- Статус -->
+      <div class="flex justify-between items-center py-2">
+        <span class="text-surface-600 dark:text-surface-400">Статус</span>
+        <span class="font-medium">{{ formatStatus(weld.weldStatus) }}</span>
+      </div>
+
+      <!-- Примечания -->
+      @if (weld.notes) {
+        <div class="mt-2 p-3 bg-surface-100 dark:bg-surface-800 rounded-lg">
+          <span class="text-sm text-surface-600 dark:text-surface-400 block mb-1">Примечания:</span>
+          <span class="text-sm">{{ weld.notes }}</span>
+        </div>
+      }
+    </div>
+  } @else {
+    <div class="text-center text-surface-500 py-4">
+      Данные не загружены
+    </div>
+  }
+</p-card>

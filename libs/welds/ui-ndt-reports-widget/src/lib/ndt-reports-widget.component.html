@@ -1,0 +1,65 @@
+<!-- Виджет заключений по методам НК -->
+<!-- @see https://primeng.org/card -->
+<p-card class="w-full">
+  <ng-template pTemplate="header">
+    <div class="flex items-center justify-between px-4 pt-4">
+      <div class="flex items-center gap-2">
+        <i class="pi pi-file-check text-primary text-xl"></i>
+        <span class="text-lg font-semibold">Заключения НК</span>
+      </div>
+      <p-button
+        icon="pi pi-plus"
+        size="small"
+        severity="secondary"
+        [text]="true"
+        pTooltip="Добавить заключение"
+      />
+    </div>
+  </ng-template>
+
+  @if (mockReports.length > 0) {
+    <div class="flex flex-col gap-3">
+      @for (report of mockReports; track report.id) {
+        <div class="flex items-center justify-between p-3 bg-surface-50 dark:bg-surface-800 rounded-lg">
+          <div class="flex flex-col gap-1">
+            <div class="flex items-center gap-2">
+              <span class="font-medium">{{ report.method }}</span>
+              <p-tag
+                [value]="formatResult(report.result)"
+                [severity]="getResultSeverity(report.result)"
+                [rounded]="true"
+              />
+            </div>
+            <span class="text-sm text-surface-500">
+              {{ formatDate(report.date) }} • {{ report.inspector }}
+            </span>
+          </div>
+          <p-button
+            icon="pi pi-eye"
+            size="small"
+            severity="secondary"
+            [text]="true"
+            pTooltip="Просмотреть"
+          />
+        </div>
+      }
+    </div>
+  } @else {
+    <div class="text-center text-surface-500 py-4">
+      <i class="pi pi-inbox text-3xl mb-2 block"></i>
+      <span>Заключения отсутствуют</span>
+    </div>
+  }
+
+  <ng-template pTemplate="footer">
+    <div class="text-center">
+      <p-button
+        label="Все заключения"
+        icon="pi pi-list"
+        severity="secondary"
+        [text]="true"
+        size="small"
+      />
+    </div>
+  </ng-template>
+</p-card>

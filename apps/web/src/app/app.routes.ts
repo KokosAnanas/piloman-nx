@@ -31,4 +31,16 @@ export const appRoutes: Route[] = [
     loadComponent: () =>
       import('@piloman/welds/feature-welds').then((m) => m.WeldsComponent),
   },
+
+  /**
+   * Дашборд отдельного сварного соединения
+   *
+   * Lazy loading компонента из feature-weld-dashboard.
+   * URL: /welds/:weldId/dashboard
+   */
+  {
+    path: 'welds/:weldId/dashboard',
+    loadComponent: () =>
+      import('@piloman/welds/feature-weld-dashboard').then((m) => m.WeldDashboardComponent),
+  },
 ];

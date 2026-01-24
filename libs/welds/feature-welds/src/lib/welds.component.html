@@ -41,6 +41,8 @@
     <div class="overflow-x-auto p-8 [&_.p-datatable]:w-fit [&_.p-datatable-table-container]:w-fit [&_.p-datatable-table]:w-fit">
       <!-- Таблица PrimeNG: table-fixed -->
       <!-- @see https://primeng.org/table#basic -->
+      <!-- Таблица с поддержкой выбора строки для перехода на дашборд -->
+      <!-- @see https://primeng.org/table#single-row-selection -->
       <p-table
         [value]="tableData()"
         [loading]="loading()"
@@ -48,6 +50,12 @@
         [rows]="100"
         [rowsPerPageOptions]="[50, 100, 150, 200]"
         tableStyleClass="table-fixed"
+        [rowHover]="true"
+        selectionMode="single"
+        [(selection)]="selectedWeld"
+        dataKey="id"
+        [metaKeySelection]="false"
+        (onRowSelect)="onRowSelect($event)"
       >
       <ng-template pTemplate="header">
         <tr>
@@ -197,20 +205,22 @@
             }
           </tr>
         } @else {
-          <!-- Обычная строка данных -->
-          <tr>
+          <!-- Обычная строка данных с подсветкой при наведении -->
+          <!-- pSelectableRow делает строку выбираемой для onRowSelect -->
+          <tr [pSelectableRow]="row" class="cursor-pointer hover:bg-surface-100 dark:hover:bg-surface-800">
             <!-- Действия — первая колонка -->
             <td class="w-[80px] min-w-[80px] max-w-[80px]">
               <div class="min-w-0 w-full flex items-center justify-center">
                 <!-- Кнопка удаления стыка -->
                 <!-- @see https://primeng.org/button -->
+                <!-- stopPropagation предотвращает переход на дашборд при клике -->
                 <p-button
                   icon="pi pi-trash"
                   size="small"
                   severity="secondary"
                   [disabled]="deletingId() === (row.id ?? row._id) || isSaving() || isAdding()"
                   [loading]="deletingId() === (row.id ?? row._id)"
-                  (onClick)="onDeleteWeld(row)"
+                  (onClick)="onDeleteWeld(row); $event.stopPropagation()"
                 />
               </div>
             </td>

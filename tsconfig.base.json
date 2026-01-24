@@ -18,6 +18,10 @@
       "@piloman/welds/models": ["libs/welds/models/src/index.ts"],
       "@piloman/welds/data-access": ["libs/welds/data-access/src/index.ts"],
       "@piloman/welds/feature-welds": ["libs/welds/feature-welds/src/index.ts"],
+      "@piloman/welds/feature-weld-dashboard": ["libs/welds/feature-weld-dashboard/src/index.ts"],
+      "@piloman/welds/ui-weld-params-widget": ["libs/welds/ui-weld-params-widget/src/index.ts"],
+      "@piloman/welds/ui-ndt-reports-widget": ["libs/welds/ui-ndt-reports-widget/src/index.ts"],
+      "@piloman/welds/ui-ndt-norms-widget": ["libs/welds/ui-ndt-norms-widget/src/index.ts"],
       "@piloman/core/theme": ["libs/core/theme/src/index.ts"],
       "@piloman/core/layout": ["libs/core/layout/src/index.ts"],
       "@piloman/shared/ui": ["libs/shared/ui/src/index.ts"]

@@ -12,6 +12,7 @@
  */
 
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import {
   FormBuilder,
@@ -23,7 +24,7 @@ import {
 
 // PrimeNG v21 компоненты
 // @see https://primeng.org/
-import { TableModule } from 'primeng/table';
+import { TableModule, TableRowSelectEvent } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
@@ -96,6 +97,12 @@ const HIDDEN_BY_DEFAULT = ['weldDate', 'weldingProcess', 'joint', 'weldStatus', 
 })
 export class WeldsComponent implements OnInit {
   /**
+   * Router для навигации на дашборд стыка
+   * @see https://angular.dev/guide/routing
+   */
+  private readonly router = inject(Router);
+
+  /**
    * WeldsApiService для загрузки/сохранения данных
    */
   private readonly weldsApi = inject(WeldsApiService);
@@ -142,6 +149,12 @@ export class WeldsComponent implements OnInit {
    * ID удаляемого стыка (для отображения loading состояния на кнопке)
    */
   deletingId = signal<string | null>(null);
+
+  /**
+   * Выбранный стык (для single selection в таблице)
+   * Используется для навигации на дашборд при клике
+   */
+  selectedWeld: Weld | null = null;
 
   /**
    * Данные для таблицы: если isAdding — добавляем draft строку в начало
@@ -519,6 +532,29 @@ export class WeldsComponent implements OnInit {
       done: 'Завершён',
     };
     return value ? map[value] || value : '-';
+  }
+
+  /**
+   * Обработчик выбора строки таблицы
+   *
+   * Переходит на страницу дашборда выбранного стыка.
+   * Игнорирует выбор draft-строки (форма добавления).
+   *
+   * @param event - событие выбора строки PrimeNG Table
+   * @see https://primeng.org/table#single-row-selection
+   */
+  onRowSelect(event: TableRowSelectEvent): void {
+    const row = event.data;
+
+    // Игнорируем draft-строку (форма добавления)
+    if (row._isDraft) {
+      return;
+    }
+
+    const id = row.id ?? row._id;
+    if (id) {
+      this.router.navigate(['/welds', id, 'dashboard']);
+    }
   }
 
   /**

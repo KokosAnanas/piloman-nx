@@ -1,0 +1,7 @@
+{
+  "name": "welds-ui-ndt-reports-widget",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/welds/ui-ndt-reports-widget/src",
+  "projectType": "library",
+  "tags": ["scope:welds", "type:ui"]
+}

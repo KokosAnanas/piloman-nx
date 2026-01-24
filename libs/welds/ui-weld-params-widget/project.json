@@ -1,0 +1,7 @@
+{
+  "name": "welds-ui-weld-params-widget",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/welds/ui-weld-params-widget/src",
+  "projectType": "library",
+  "tags": ["scope:welds", "type:ui"]
+}
