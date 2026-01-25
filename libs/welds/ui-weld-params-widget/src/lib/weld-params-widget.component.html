@@ -1,5 +1,6 @@
-<!-- Виджет параметров стыка -->
+<!-- Виджет параметров стыка с формой -->
 <!-- @see https://primeng.org/card -->
+<!-- @see https://primeng.org/floatlabel -->
 <p-card class="w-full">
   <ng-template pTemplate="header">
     <div class="flex items-center gap-2 px-4 pt-4">
@@ -9,76 +10,67 @@
   </ng-template>
 
   @if (weld) {
-    <div class="flex flex-col gap-3">
-      <!-- Номер стыка -->
-      <div class="flex justify-between items-center py-2 border-b border-surface-200 dark:border-surface-700">
-        <span class="text-surface-600 dark:text-surface-400">Номер стыка</span>
-        <span class="font-medium">{{ weld.weldNumber }}</span>
+    <!-- Сетка: 1 колонка на мобильных устройствах, 2 на планшете и 6-частная на десктопе.
+         Для десктопа используем 6 равных частей: маленькие колонки занимают 1 часть,
+         большие — 2 части. Это позволяет задать разную ширину, сохраняя соотношение. -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 p-4">
+      <!-- Первая колонка (D, S1, S2) -->
+      <div class="lg:col-span-1 flex flex-col gap-4">
+        <!-- Диаметр -->
+        <p-floatlabel class="w-full">
+          <p-inputNumber [(ngModel)]="weld.diameter" inputId="diameter" [min]="0" class="w-full" inputStyleClass="w-full" />
+          <label for="diameter">Диаметр (D), мм</label>
+        </p-floatlabel>
+        <!-- Толщина S1 -->
+        <p-floatlabel class="w-full">
+          <p-inputNumber [(ngModel)]="weld.thickness1" inputId="thickness1" [min]="0" [minFractionDigits]="1" [maxFractionDigits]="2" class="w-full" inputStyleClass="w-full" />
+          <label for="thickness1">Толщина S1, мм</label>
+        </p-floatlabel>
+        <!-- Толщина S2 -->
+        <p-floatlabel class="w-full">
+          <p-inputNumber [(ngModel)]="weld.thickness2" inputId="thickness2" [min]="0" [minFractionDigits]="1" [maxFractionDigits]="2" class="w-full" inputStyleClass="w-full" />
+          <label for="thickness2">Толщина S2, мм</label>
+        </p-floatlabel>
       </div>
 
-      <!-- Диаметр -->
-      <div class="flex justify-between items-center py-2 border-b border-surface-200 dark:border-surface-700">
-        <span class="text-surface-600 dark:text-surface-400">Диаметр (D), мм</span>
-        <span class="font-medium">{{ weld.diameter }}</span>
+      <!-- Вторая колонка (уровень качества, способ сварки, тип соединения) -->
+      <div class="lg:col-span-2 flex flex-col gap-4">
+        <!-- Уровень качества (SelectButton) -->
+        <p-selectButton
+          [options]="qualityLevelOptions"
+          [(ngModel)]="weld.qualityLevel"
+          optionLabel="label"
+          optionValue="value"
+          [allowEmpty]="false"
+          styleClass="w-full" />
+        <!-- Способ сварки -->
+        <p-floatlabel class="w-full">
+          <input pInputText [(ngModel)]="weld.weldingProcess" id="weldingProcess" class="w-full" />
+          <label for="weldingProcess">Способ сварки</label>
+        </p-floatlabel>
+        <!-- Тип сварного соединения -->
+        <p-floatlabel class="w-full">
+          <input pInputText [(ngModel)]="weld.joint" id="joint" class="w-full" />
+          <label for="joint">Тип соединения</label>
+        </p-floatlabel>
       </div>
 
-      <!-- Толщина 1 -->
-      <div class="flex justify-between items-center py-2 border-b border-surface-200 dark:border-surface-700">
-        <span class="text-surface-600 dark:text-surface-400">Толщина (S1), мм</span>
-        <span class="font-medium">{{ weld.thickness1 }}</span>
+      <!-- Третья колонка — пустая: здесь позже можно разместить изображение -->
+      <div class="lg:col-span-1"></div>
+
+      <!-- Четвёртая колонка (дата и примечания) -->
+      <div class="lg:col-span-2 flex flex-col gap-4">
+        <!-- Дата сварки -->
+        <p-floatlabel class="w-full">
+          <input pInputText type="date" [(ngModel)]="weld.weldDate" id="weldDate" class="w-full" />
+          <label for="weldDate">Дата сварки</label>
+        </p-floatlabel>
+        <!-- Примечания -->
+        <p-floatlabel class="w-full">
+          <textarea pTextarea [(ngModel)]="weld.notes" id="notes" rows="5" class="w-full"></textarea>
+          <label for="notes">Примечания</label>
+        </p-floatlabel>
       </div>
-
-      <!-- Толщина 2 (если есть) -->
-      @if (weld.thickness2) {
-        <div class="flex justify-between items-center py-2 border-b border-surface-200 dark:border-surface-700">
-          <span class="text-surface-600 dark:text-surface-400">Толщина (S2), мм</span>
-          <span class="font-medium">{{ weld.thickness2 }}</span>
-        </div>
-      }
-
-      <!-- Уровень качества -->
-      <div class="flex justify-between items-center py-2 border-b border-surface-200 dark:border-surface-700">
-        <span class="text-surface-600 dark:text-surface-400">Уровень качества</span>
-        <span class="font-medium">{{ formatQualityLevel(weld.qualityLevel) }}</span>
-      </div>
-
-      <!-- Способ сварки -->
-      @if (weld.weldingProcess) {
-        <div class="flex justify-between items-center py-2 border-b border-surface-200 dark:border-surface-700">
-          <span class="text-surface-600 dark:text-surface-400">Способ сварки</span>
-          <span class="font-medium">{{ formatWeldingProcess(weld.weldingProcess) }}</span>
-        </div>
-      }
-
-      <!-- Тип соединения -->
-      @if (weld.joint) {
-        <div class="flex justify-between items-center py-2 border-b border-surface-200 dark:border-surface-700">
-          <span class="text-surface-600 dark:text-surface-400">Тип соединения</span>
-          <span class="font-medium">{{ formatJoint(weld.joint) }}</span>
-        </div>
-      }
-
-      <!-- Дата сварки -->
-      @if (weld.weldDate) {
-        <div class="flex justify-between items-center py-2 border-b border-surface-200 dark:border-surface-700">
-          <span class="text-surface-600 dark:text-surface-400">Дата сварки</span>
-          <span class="font-medium">{{ formatDate(weld.weldDate) }}</span>
-        </div>
-      }
-
-      <!-- Статус -->
-      <div class="flex justify-between items-center py-2">
-        <span class="text-surface-600 dark:text-surface-400">Статус</span>
-        <span class="font-medium">{{ formatStatus(weld.weldStatus) }}</span>
-      </div>
-
-      <!-- Примечания -->
-      @if (weld.notes) {
-        <div class="mt-2 p-3 bg-surface-100 dark:bg-surface-800 rounded-lg">
-          <span class="text-sm text-surface-600 dark:text-surface-400 block mb-1">Примечания:</span>
-          <span class="text-sm">{{ weld.notes }}</span>
-        </div>
-      }
     </div>
   } @else {
     <div class="text-center text-surface-500 py-4">
