@@ -1,6 +1,8 @@
 import { Component, inject, input, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { Toast } from 'primeng/toast';
+import { MessageService } from 'primeng/api';
 
 import { MenuItem } from '../../layout.models';
 import { LayoutService } from '../../layout.service';
@@ -34,7 +36,9 @@ import { ConfiguratorComponent } from '../configurator/configurator.component';
     SidebarComponent,
     FooterComponent,
     ConfiguratorComponent,
+    Toast,
   ],
+  providers: [MessageService],
   templateUrl: './layout.component.html',
   styleUrl: './layout.component.scss',
 })

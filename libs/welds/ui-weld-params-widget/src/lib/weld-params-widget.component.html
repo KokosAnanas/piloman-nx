@@ -9,8 +9,23 @@
         <span class="text-lg font-semibold">Параметры сварного соединения № </span>
       </div>
       @if (weld) {
-        <input pInputText [(ngModel)]="weld.weldNumber" placeholder="№ стыка" class="w-32 text-left font-semibold" />
+        <input
+          pInputText
+          [(ngModel)]="weld.weldNumber"
+          (ngModelChange)="onFieldChange('weldNumber')"
+          placeholder="№ стыка"
+          class="w-32 text-left font-semibold"
+          [ngClass]="{'ring-2 ring-yellow-400': changedFields()['weldNumber']}" />
       }
+      <!-- Кнопка сохранения справа -->
+      <div class="ml-auto">
+        <p-button
+          label="Сохранить изменения"
+          icon="pi pi-save"
+          (onClick)="saveChanges()"
+          [disabled]="!hasUnsavedChanges() || isSaving()"
+          [loading]="isSaving()" />
+      </div>
     </div>
   </ng-template>
 
@@ -22,18 +37,49 @@
       <!-- Первая колонка (D, S1, S2) -->
       <div class="lg:col-span-1 flex flex-col gap-4">
         <!-- Диаметр -->
-        <p-floatlabel class="w-full" variant="on">
-          <p-inputNumber [(ngModel)]="weld.diameter" inputId="diameter" [min]="0" class="w-full" inputStyleClass="w-full" />
+        <p-floatlabel
+          class="w-full"
+          variant="on"
+          [ngClass]="{'ring-2 ring-yellow-400 rounded': changedFields()['diameter']}">
+          <p-inputNumber
+            [(ngModel)]="weld.diameter"
+            (ngModelChange)="onFieldChange('diameter')"
+            inputId="diameter"
+            [min]="0"
+            class="w-full"
+            inputStyleClass="w-full" />
           <label for="diameter">Диаметр (D), мм</label>
         </p-floatlabel>
         <!-- Толщина S1 -->
-        <p-floatlabel class="w-full" variant="on">
-          <p-inputNumber [(ngModel)]="weld.thickness1" inputId="thickness1" [min]="0" [minFractionDigits]="1" [maxFractionDigits]="2" class="w-full" inputStyleClass="w-full" />
+        <p-floatlabel
+          class="w-full"
+          variant="on"
+          [ngClass]="{'ring-2 ring-yellow-400 rounded': changedFields()['thickness1']}">
+          <p-inputNumber
+            [(ngModel)]="weld.thickness1"
+            (ngModelChange)="onFieldChange('thickness1')"
+            inputId="thickness1"
+            [min]="0"
+            [minFractionDigits]="1"
+            [maxFractionDigits]="2"
+            class="w-full"
+            inputStyleClass="w-full" />
           <label for="thickness1">Толщина S1, мм</label>
         </p-floatlabel>
         <!-- Толщина S2 -->
-        <p-floatlabel class="w-full" variant="on">
-          <p-inputNumber [(ngModel)]="weld.thickness2" inputId="thickness2" [min]="0" [minFractionDigits]="1" [maxFractionDigits]="2" class="w-full" inputStyleClass="w-full" />
+        <p-floatlabel
+          class="w-full"
+          variant="on"
+          [ngClass]="{'ring-2 ring-yellow-400 rounded': changedFields()['thickness2']}">
+          <p-inputNumber
+            [(ngModel)]="weld.thickness2"
+            (ngModelChange)="onFieldChange('thickness2')"
+            inputId="thickness2"
+            [min]="0"
+            [minFractionDigits]="1"
+            [maxFractionDigits]="2"
+            class="w-full"
+            inputStyleClass="w-full" />
           <label for="thickness2">Толщина S2, мм</label>
         </p-floatlabel>
       </div>
@@ -41,21 +87,40 @@
       <!-- Вторая колонка (уровень качества, способ сварки, тип соединения) -->
       <div class="lg:col-span-2 flex flex-col gap-4">
         <!-- Уровень качества (SelectButton) -->
-        <p-selectButton
-          [options]="qualityLevelOptions"
-          [(ngModel)]="weld.qualityLevel"
-          optionLabel="label"
-          optionValue="value"
-          [allowEmpty]="false"
-          styleClass="w-full" />
+        <div [ngClass]="{'ring-2 ring-yellow-400 rounded': changedFields()['qualityLevel']}">
+          <p-selectButton
+            [options]="qualityLevelOptions"
+            [(ngModel)]="weld.qualityLevel"
+            (ngModelChange)="onFieldChange('qualityLevel')"
+            optionLabel="label"
+            optionValue="value"
+            [allowEmpty]="false"
+            styleClass="w-full" />
+        </div>
         <!-- Способ сварки -->
-        <p-floatlabel class="w-full" variant="on">
-          <input pInputText [(ngModel)]="weld.weldingProcess" id="weldingProcess" class="w-full" />
+        <p-floatlabel
+          class="w-full"
+          variant="on"
+          [ngClass]="{'ring-2 ring-yellow-400 rounded': changedFields()['weldingProcess']}">
+          <input
+            pInputText
+            [(ngModel)]="weld.weldingProcess"
+            (ngModelChange)="onFieldChange('weldingProcess')"
+            id="weldingProcess"
+            class="w-full" />
           <label for="weldingProcess">Способ сварки</label>
         </p-floatlabel>
         <!-- Тип сварного соединения -->
-        <p-floatlabel class="w-full" variant="on">
-          <input pInputText [(ngModel)]="weld.joint" id="joint" class="w-full" />
+        <p-floatlabel
+          class="w-full"
+          variant="on"
+          [ngClass]="{'ring-2 ring-yellow-400 rounded': changedFields()['joint']}">
+          <input
+            pInputText
+            [(ngModel)]="weld.joint"
+            (ngModelChange)="onFieldChange('joint')"
+            id="joint"
+            class="w-full" />
           <label for="joint">Тип соединения</label>
         </p-floatlabel>
       </div>
@@ -66,13 +131,31 @@
       <!-- Четвёртая колонка (дата и примечания) -->
       <div class="lg:col-span-2 flex flex-col gap-4">
         <!-- Дата сварки -->
-        <p-floatlabel class="w-full" variant="on">
-          <input pInputText type="date" [(ngModel)]="weld.weldDate" id="weldDate" class="w-full" />
+        <p-floatlabel
+          class="w-full"
+          variant="on"
+          [ngClass]="{'ring-2 ring-yellow-400 rounded': changedFields()['weldDate']}">
+          <input
+            pInputText
+            type="date"
+            [(ngModel)]="weld.weldDate"
+            (ngModelChange)="onFieldChange('weldDate')"
+            id="weldDate"
+            class="w-full" />
           <label for="weldDate">Дата сварки</label>
         </p-floatlabel>
         <!-- Примечания -->
-        <p-floatlabel class="w-full" variant="on">
-          <textarea pTextarea [(ngModel)]="weld.notes" id="notes" rows="5" class="w-full"></textarea>
+        <p-floatlabel
+          class="w-full"
+          variant="on"
+          [ngClass]="{'ring-2 ring-yellow-400 rounded': changedFields()['notes']}">
+          <textarea
+            pTextarea
+            [(ngModel)]="weld.notes"
+            (ngModelChange)="onFieldChange('notes')"
+            id="notes"
+            rows="5"
+            class="w-full"></textarea>
           <label for="notes">Примечания</label>
         </p-floatlabel>
       </div>
