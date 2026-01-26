@@ -3,7 +3,7 @@
 <!-- @see https://primeng.org/floatlabel -->
 <p-card class="w-full">
   <ng-template pTemplate="header">
-    <div class="flex items-center gap-2 px-4 pt-4">
+    <div class="flex flex-wrap items-center gap-2 px-4 pt-4">
       <div class="flex items-center gap-2">
         <i class="pi pi-cog text-primary text-xl"></i>
         <span class="text-lg font-semibold">Параметры сварного соединения № </span>
@@ -14,11 +14,18 @@
           [(ngModel)]="weld.weldNumber"
           (ngModelChange)="onFieldChange('weldNumber')"
           placeholder="№ стыка"
-          class="w-32 text-left font-semibold"
+          class="min-w-32 text-left font-semibold"
           [ngClass]="{'ring-2 ring-yellow-400': changedFields()['weldNumber']}" />
       }
-      <!-- Кнопка сохранения справа -->
-      <div class="ml-auto">
+      <!-- Кнопки сохранения и сброса справа -->
+      <div class="ml-auto flex gap-2">
+        <p-button
+          label="Сбросить"
+          icon="pi pi-undo"
+          severity="secondary"
+          [outlined]="true"
+          (onClick)="resetChanges()"
+          [disabled]="!hasUnsavedChanges() || isSaving()" />
         <p-button
           label="Сохранить изменения"
           icon="pi pi-save"
@@ -33,7 +40,7 @@
     <!-- Сетка: 1 колонка на мобильных устройствах, 2 на планшете и 6-частная на десктопе.
          Для десктопа используем 6 равных частей: маленькие колонки занимают 1 часть,
          большие — 2 части. Это позволяет задать разную ширину, сохраняя соотношение. -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 p-4">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 p-0">
       <!-- Первая колонка (D, S1, S2) -->
       <div class="lg:col-span-1 flex flex-col gap-4">
         <!-- Диаметр -->
@@ -72,14 +79,20 @@
           variant="on"
           [ngClass]="{'ring-2 ring-yellow-400 rounded': changedFields()['thickness2']}">
           <p-inputNumber
+            pTooltip="Не заполняется, если S1=S2"
+            [showDelay]="1000"
+            tooltipPosition="top"
+            [dt]="{background: 'var(--p-primary-500)', color: 'var(--p-primary-contrast-color)'}"
             [(ngModel)]="weld.thickness2"
             (ngModelChange)="onFieldChange('thickness2')"
             inputId="thickness2"
             [min]="0"
             [minFractionDigits]="1"
             [maxFractionDigits]="2"
+            placeholder=""
             class="w-full"
-            inputStyleClass="w-full" />
+            inputStyleClass="w-full"
+          />
           <label for="thickness2">Толщина S2, мм</label>
         </p-floatlabel>
       </div>
@@ -87,26 +100,31 @@
       <!-- Вторая колонка (уровень качества, способ сварки, тип соединения) -->
       <div class="lg:col-span-2 flex flex-col gap-4">
         <!-- Уровень качества (SelectButton) -->
-        <div [ngClass]="{'ring-2 ring-yellow-400 rounded': changedFields()['qualityLevel']}">
+        <div class="flex items-center gap-2" >
+          <label class="text-base whitespace-nowrap">Уровень качества</label>
           <p-selectButton
             [options]="qualityLevelOptions"
             [(ngModel)]="weld.qualityLevel"
             (ngModelChange)="onFieldChange('qualityLevel')"
+            [ngClass]="{'ring-2 ring-yellow-400 rounded': changedFields()['qualityLevel']}"
             optionLabel="label"
             optionValue="value"
             [allowEmpty]="false"
             styleClass="w-full" />
         </div>
-        <!-- Способ сварки -->
+        <!-- Способ сварки (p-select) -->
+        <!-- @see https://primeng.org/select -->
         <p-floatlabel
           class="w-full"
           variant="on"
           [ngClass]="{'ring-2 ring-yellow-400 rounded': changedFields()['weldingProcess']}">
-          <input
-            pInputText
+          <p-select
             [(ngModel)]="weld.weldingProcess"
+            [options]="weldingProcessOptions"
+            optionLabel="name"
+            optionValue="value"
             (ngModelChange)="onFieldChange('weldingProcess')"
-            id="weldingProcess"
+            inputId="weldingProcess"
             class="w-full" />
           <label for="weldingProcess">Способ сварки</label>
         </p-floatlabel>
@@ -115,33 +133,42 @@
           class="w-full"
           variant="on"
           [ngClass]="{'ring-2 ring-yellow-400 rounded': changedFields()['joint']}">
-          <input
-            pInputText
+          <p-select
             [(ngModel)]="weld.joint"
+            [options]="jointTypeOptions"
+            optionLabel="name"
+            optionValue="value"
             (ngModelChange)="onFieldChange('joint')"
-            id="joint"
+            inputId="joint"
             class="w-full" />
           <label for="joint">Тип соединения</label>
         </p-floatlabel>
       </div>
 
-      <!-- Третья колонка — пустая: здесь позже можно разместить изображение -->
-      <div class="lg:col-span-1"></div>
+      <!-- Третья колонка — изображение схемы соединения -->
+      <div class="lg:col-span-1 flex items-center justify-center p-2">
+        <img
+          [src]="jointImagePath"
+          alt="Схема сварного соединения"
+          class="max-w-full max-h-32 object-contain" />
+      </div>
 
       <!-- Четвёртая колонка (дата и примечания) -->
       <div class="lg:col-span-2 flex flex-col gap-4">
         <!-- Дата сварки -->
+        <!-- @see https://primeng.org/datepicker -->
         <p-floatlabel
-          class="w-full"
+          class="min-w-32 max-w-44"
           variant="on"
           [ngClass]="{'ring-2 ring-yellow-400 rounded': changedFields()['weldDate']}">
-          <input
-            pInputText
-            type="date"
-            [(ngModel)]="weld.weldDate"
-            (ngModelChange)="onFieldChange('weldDate')"
-            id="weldDate"
-            class="w-full" />
+          <p-datepicker
+            [(ngModel)]="weldDateAsDate"
+            inputId="weldDate"
+            dateFormat="dd.mm.yy"
+            [showIcon]="true"
+            iconDisplay="input"
+            [fluid]="true"
+            appendTo="body"></p-datepicker>
           <label for="weldDate">Дата сварки</label>
         </p-floatlabel>
         <!-- Примечания -->
@@ -154,7 +181,7 @@
             [(ngModel)]="weld.notes"
             (ngModelChange)="onFieldChange('notes')"
             id="notes"
-            rows="5"
+            rows="3"
             class="w-full"></textarea>
           <label for="notes">Примечания</label>
         </p-floatlabel>

@@ -38,8 +38,8 @@ export interface CreateWeldDto {
   /** Уровень качества — обязательно */
   qualityLevel: QualityLevel;
 
-  /** Дата сварки (ISO string) */
-  weldDate?: string;
+  /** Дата сварки (ISO string). null = очистить дату */
+  weldDate?: string | null;
 
   /** Способ сварки. По умолчанию: SMAW_GMAW */
   weldingProcess?: WeldingProcess;

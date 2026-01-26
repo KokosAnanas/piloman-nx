@@ -24,9 +24,12 @@ import { Textarea } from 'primeng/textarea';
 import { InputNumber } from 'primeng/inputnumber';
 import { SelectButton } from 'primeng/selectbutton';
 import { Button } from 'primeng/button';
+import { Tooltip } from 'primeng/tooltip';
+import { DatePicker } from 'primeng/datepicker';
 import { MessageService } from 'primeng/api';
 import type { Weld } from '@piloman/welds/models';
 import { WeldsApiService } from '@piloman/welds/data-access';
+import {Select} from "primeng/select";
 
 /**
  * Standalone компонент — виджет параметров стыка с формой редактирования
@@ -44,6 +47,9 @@ import { WeldsApiService } from '@piloman/welds/data-access';
     InputNumber,
     SelectButton,
     Button,
+    Tooltip,
+    DatePicker,
+    Select,
   ],
   templateUrl: './weld-params-widget.component.html',
 })
@@ -66,8 +72,41 @@ export class WeldParamsWidgetComponent {
 
   /**
    * Данные стыка (передаются от родителя)
+   * При установке сохраняем копию исходных значений для сравнения и сброса
    */
-  @Input() weld: Weld | null = null;
+  @Input()
+  set weld(value: Weld | null) {
+    this._weld = value;
+    // Сохраняем копию исходных значений при получении данных
+    this.originalWeld = value ? { ...value } : null;
+    // Сбрасываем состояние изменений
+    this.changedFields.set({});
+    this.hasUnsavedChanges.set(false);
+    // Сбрасываем кэш даты для корректной работы при переключении между стыками
+    this._lastWeldDateString = undefined;
+    this._weldDateCache = null;
+  }
+  get weld(): Weld | null {
+    return this._weld;
+  }
+  private _weld: Weld | null = null;
+
+  /**
+   * Исходные значения weld для сравнения и сброса
+   */
+  private originalWeld: Weld | null = null;
+
+  /**
+   * Кэшированное значение weldDate как Date для p-datepicker
+   * Предотвращает бесконечный цикл change detection
+   * @see https://primeng.org/datepicker
+   */
+  private _weldDateCache: Date | null = null;
+
+  /**
+   * Последнее значение weldDate (строка) для отслеживания изменений
+   */
+  private _lastWeldDateString: string | null | undefined = undefined;
 
   /**
    * Флаг наличия несохранённых изменений (signal)
@@ -96,14 +135,166 @@ export class WeldParamsWidgetComponent {
   ];
 
   /**
+   * Варианты способа сварки для Select
+   * @see WeldingProcess в weld.model.ts
+   */
+  readonly weldingProcessOptions = [
+    { name: 'Ручная дуговая, полуавтоматическая', value: 'SMAW_GMAW' },
+    { name: 'Автоматическая в защитных газах', value: 'GTAW' },
+    { name: 'Автоматическая под флюсом', value: 'SAW' },
+  ];
+
+  /**
+   * Варианты типа сварного соединения для Select
+   * @see JointType в weld.model.ts
+   */
+  readonly jointTypeOptions = [
+    { name: 'Стыковое', value: 'BUTT' },
+    { name: 'Угловое/Нахлёсточное', value: 'FILLET_LAP' },
+  ];
+
+  /**
+   * Путь к изображению схемы соединения в зависимости от типа joint
+   * Используем getter вместо computed, т.к. weld — обычный объект (не signal),
+   * и computed не отслеживает его изменения
+   */
+  get jointImagePath(): string {
+    const joint = this.weld?.joint ?? 'BUTT';
+    const filename = joint === 'FILLET_LAP' ? 'fillet_lap' : 'butt';
+    return `/welds/weld-profiles-joint/${filename}.png`;
+  }
+
+  /**
+   * Getter для weldDate — преобразует string в Date для p-datepicker
+   * Использует кэширование для предотвращения бесконечного цикла change detection
+   * @see https://primeng.org/datepicker
+   */
+  get weldDateAsDate(): Date | null {
+    const currentDateString = this.weld?.weldDate;
+
+    // Если строка не изменилась — возвращаем кэш
+    if (currentDateString === this._lastWeldDateString) {
+      return this._weldDateCache;
+    }
+
+    // Строка изменилась — обновляем кэш
+    this._lastWeldDateString = currentDateString;
+
+    if (!currentDateString) {
+      this._weldDateCache = null;
+    } else {
+      this._weldDateCache = new Date(currentDateString);
+    }
+
+    return this._weldDateCache;
+  }
+
+  /**
+   * Setter для weldDate — преобразует Date в string (ISO формат YYYY-MM-DD)
+   * @see https://primeng.org/datepicker
+   */
+  set weldDateAsDate(value: Date | null) {
+    if (!this.weld) return;
+
+    if (value instanceof Date) {
+      // Формат YYYY-MM-DD с использованием локального времени
+      // (toISOString() конвертирует в UTC, что сдвигает дату на день назад для UTC+ часовых поясов)
+      const year = value.getFullYear();
+      const month = String(value.getMonth() + 1).padStart(2, '0');
+      const day = String(value.getDate()).padStart(2, '0');
+      this.weld.weldDate = `${year}-${month}-${day}`;
+    } else {
+      // Используем null вместо undefined, чтобы значение сериализовалось в JSON
+      // и было отправлено на сервер для очистки поля в базе данных
+      this.weld.weldDate = null;
+    }
+
+    // Обновляем кэш сразу после изменения
+    this._lastWeldDateString = this.weld.weldDate;
+    this._weldDateCache = value;
+
+    this.onFieldChange('weldDate');
+  }
+
+  /**
+   * Проверяет, является ли значение "пустым" (null, undefined или пустая строка)
+   * Используется для корректного сравнения полей формы
+   */
+  private isEmpty(value: unknown): boolean {
+    return value === null || value === undefined || value === '';
+  }
+
+  /**
+   * Сравнивает два значения с учётом "пустых" значений
+   * null, undefined и '' считаются эквивалентными
+   * Решает проблему: p-inputNumber выставляет null при blur на пустом поле,
+   * а исходное значение может быть undefined
+   */
+  private valuesEqual(a: unknown, b: unknown): boolean {
+    // Если оба пустые — равны
+    if (this.isEmpty(a) && this.isEmpty(b)) {
+      return true;
+    }
+    return a === b;
+  }
+
+  /**
    * Обработчик изменения поля формы
-   * Устанавливает флаг несохранённых изменений и добавляет поле в набор изменённых
+   * Сравнивает текущее значение с исходным — если равны, убирает подсветку
    *
    * @param field - имя изменённого поля
    */
   onFieldChange(field: string): void {
-    this.hasUnsavedChanges.set(true);
-    this.changedFields.update((fields) => ({ ...fields, [field]: true }));
+    if (!this.weld || !this.originalWeld) return;
+
+    const currentValue = (this.weld as unknown as Record<string, unknown>)[field];
+    const originalValue = (this.originalWeld as unknown as Record<string, unknown>)[field];
+
+    // Сравниваем текущее значение с исходным (с учётом "пустых" значений)
+    const isChanged = !this.valuesEqual(currentValue, originalValue);
+
+    this.changedFields.update((fields) => {
+      const newFields = { ...fields };
+      if (isChanged) {
+        newFields[field] = true;
+      } else {
+        delete newFields[field];
+      }
+      return newFields;
+    });
+
+    // Обновляем флаг наличия изменений
+    this.hasUnsavedChanges.set(Object.keys(this.changedFields()).length > 0);
+  }
+
+  /**
+   * Сброс всех изменений к исходным значениям
+   *
+   * Важно: Object.assign не копирует undefined значения, поэтому
+   * явно присваиваем каждое редактируемое поле
+   */
+  resetChanges(): void {
+    if (!this.originalWeld || !this._weld) return;
+
+    // Явно восстанавливаем все редактируемые поля (включая undefined/null)
+    // Object.assign не копирует undefined, поэтому используем явное присваивание
+    this._weld.weldNumber = this.originalWeld.weldNumber;
+    this._weld.diameter = this.originalWeld.diameter;
+    this._weld.thickness1 = this.originalWeld.thickness1;
+    this._weld.thickness2 = this.originalWeld.thickness2;
+    this._weld.qualityLevel = this.originalWeld.qualityLevel;
+    this._weld.weldDate = this.originalWeld.weldDate;
+    this._weld.weldingProcess = this.originalWeld.weldingProcess;
+    this._weld.joint = this.originalWeld.joint;
+    this._weld.notes = this.originalWeld.notes;
+
+    // Сбрасываем состояние
+    this.changedFields.set({});
+    this.hasUnsavedChanges.set(false);
+
+    // Сбрасываем кэш даты для корректного пересчёта из восстановленных данных
+    this._lastWeldDateString = undefined;
+    this._weldDateCache = null;
   }
 
   /**
@@ -120,8 +311,11 @@ export class WeldParamsWidgetComponent {
       next: (updatedWeld) => {
         // Обновляем данные из ответа сервера
         if (updatedWeld) {
-          Object.assign(this.weld!, updatedWeld);
+          Object.assign(this._weld!, updatedWeld);
         }
+
+        // Обновляем исходные значения после успешного сохранения
+        this.originalWeld = { ...this._weld! };
 
         this.hasUnsavedChanges.set(false);
         this.changedFields.set({});
@@ -170,65 +364,5 @@ export class WeldParamsWidgetComponent {
       return err.message;
     }
     return '';
-  }
-
-  /**
-   * Форматирование способа сварки
-   */
-  formatWeldingProcess(value: string | undefined): string {
-    const map: Record<string, string> = {
-      SMAW_GMAW: 'РД/ПАС (ручная дуговая / полуавтоматическая)',
-      GTAW: 'АрД (аргонодуговая)',
-      SAW: 'АФ (автоматическая под флюсом)',
-    };
-    return value ? map[value] || value : '-';
-  }
-
-  /**
-   * Форматирование типа соединения
-   */
-  formatJoint(value: string | undefined): string {
-    const map: Record<string, string> = {
-      BUTT: 'Стыковое',
-      FILLET_LAP: 'Угловое / Нахлёсточное',
-    };
-    return value ? map[value] || value : '-';
-  }
-
-  /**
-   * Форматирование уровня качества
-   */
-  formatQualityLevel(value: string | undefined): string {
-    const map: Record<string, string> = {
-      A: 'A — Высший',
-      B: 'B — Средний',
-      C: 'C — Базовый',
-    };
-    return value ? map[value] || value : '-';
-  }
-
-  /**
-   * Форматирование статуса
-   */
-  formatStatus(value: string | undefined): string {
-    const map: Record<string, string> = {
-      draft: 'Черновик',
-      in_progress: 'В работе',
-      done: 'Завершён',
-    };
-    return value ? map[value] || value : '-';
-  }
-
-  /**
-   * Форматирование даты
-   */
-  formatDate(value: string | undefined): string {
-    if (!value) return '-';
-    try {
-      const date = new Date(value);
-      return date.toLocaleDateString('ru-RU');
-    } catch {
-      return value;
-    }
   }
 }

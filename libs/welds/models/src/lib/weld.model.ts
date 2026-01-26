@@ -81,8 +81,8 @@ export interface Weld {
   /** Уровень качества: A, B или C */
   qualityLevel: QualityLevel;
 
-  /** Дата выполнения сварки (ISO string) */
-  weldDate?: string;
+  /** Дата выполнения сварки (ISO string). null = дата явно не определена */
+  weldDate?: string | null;
 
   /** Способ сварки. По умолчанию: SMAW_GMAW (ручная дуговая / полуавтоматическая) */
   weldingProcess: WeldingProcess;

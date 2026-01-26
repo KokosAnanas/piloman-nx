@@ -227,9 +227,9 @@ export class WeldsComponent implements OnInit {
    * Опции для выпадающего списка "Способ сварки"
    */
   readonly weldingProcessOptions: SelectItem[] = [
-    { label: 'РД/ПАС', value: 'SMAW_GMAW' },
-    { label: 'АрД', value: 'GTAW' },
-    { label: 'АФ', value: 'SAW' },
+    { label: 'Ручная дуговая, полуавтоматическая', value: 'SMAW_GMAW' },
+    { label: 'Автоматическая в защитных газах', value: 'GTAW' },
+    { label: 'Автоматическая под флюсом', value: 'SAW' },
   ];
 
   /**
@@ -476,8 +476,8 @@ export class WeldsComponent implements OnInit {
    */
   formatWeldingProcess(value: string | undefined): string {
     const map: Record<string, string> = {
-      SMAW_GMAW: 'РД/ПАС',
-      GTAW: 'АрД',
+      SMAW_GMAW: 'РД/МП',
+      GTAW: 'А',
       SAW: 'АФ',
     };
     return value ? map[value] || value : '-';
