@@ -5,13 +5,16 @@
  * для данного сварного соединения.
  *
  * @see https://primeng.org/card — PrimeNG Card
+ * @see https://primeng.org/select — PrimeNG Select
  */
 
-import { Component, Input } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
+import { SelectModule } from 'primeng/select';
 
 /**
  * Standalone компонент — виджет норм отбраковки
@@ -21,37 +24,21 @@ import { TooltipModule } from 'primeng/tooltip';
 @Component({
   selector: 'app-ndt-norms-widget',
   standalone: true,
-  imports: [CommonModule, CardModule, ButtonModule, TooltipModule],
+  imports: [CommonModule, FormsModule, CardModule, ButtonModule, TooltipModule, SelectModule],
   templateUrl: './ndt-norms-widget.component.html',
 })
 export class NdtNormsWidgetComponent {
   /**
-   * ID стыка для определения применимых норм
+   * Опции нормативных документов для выбора
    */
-  @Input() weldId: string = '';
+  normOptions = [
+    { name: 'СТО Газпром 15-1.3-004-2023', value: 'sto-15-1.3-004-2023' },
+    { name: 'Р Газпром 2-2.2-606-2011', value: 'r-2-2.2-606-2011' },
+    { name: 'СТО Газпром 2-2.4-083-2006', value: 'sto-2-2.4-083-2006' },
+  ];
 
   /**
-   * Заглушка: список применимых норм
-   * TODO: Заменить на реальные данные из API
+   * Выбранная норма (по умолчанию первая — СТО Газпром 15-1.3-004-2023)
    */
-  readonly mockNorms = [
-    {
-      id: '1',
-      code: 'ГОСТ 23118-2019',
-      name: 'Конструкции стальные строительные',
-      method: 'УЗК',
-    },
-    {
-      id: '2',
-      code: 'СТО Газпром 2-2.4-083-2006',
-      name: 'Инструкция по неразрушающим методам контроля',
-      method: 'РК',
-    },
-    {
-      id: '3',
-      code: 'РД 03-606-03',
-      name: 'Инструкция по визуальному и измерительному контролю',
-      method: 'ВИК',
-    },
-  ];
+  selectedNorm = signal(this.normOptions[0].value);
 }

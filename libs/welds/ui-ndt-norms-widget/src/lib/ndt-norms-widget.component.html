@@ -1,5 +1,6 @@
 <!-- Виджет норм отбраковки -->
 <!-- @see https://primeng.org/card -->
+<!-- @see https://primeng.org/select -->
 <p-card class="w-full">
   <ng-template pTemplate="header">
     <div class="flex items-center justify-between px-4 pt-4">
@@ -7,55 +8,29 @@
         <i class="pi pi-book text-primary text-xl"></i>
         <span class="text-lg font-semibold">Нормы отбраковки</span>
       </div>
-      <p-button
-        icon="pi pi-cog"
-        size="small"
-        severity="secondary"
-        [text]="true"
-        pTooltip="Настроить нормы"
-      />
     </div>
   </ng-template>
 
-  @if (mockNorms.length > 0) {
-    <div class="flex flex-col gap-3">
-      @for (norm of mockNorms; track norm.id) {
-        <div class="p-3 bg-surface-50 dark:bg-surface-800 rounded-lg">
-          <div class="flex items-start justify-between gap-2">
-            <div class="flex flex-col gap-1">
-              <span class="font-medium text-primary">{{ norm.code }}</span>
-              <span class="text-sm text-surface-600 dark:text-surface-400">{{ norm.name }}</span>
-              <span class="text-xs text-surface-500 mt-1">
-                <i class="pi pi-tag mr-1"></i>{{ norm.method }}
-              </span>
-            </div>
-            <p-button
-              icon="pi pi-external-link"
-              size="small"
-              severity="secondary"
-              [text]="true"
-              pTooltip="Открыть документ"
-            />
-          </div>
-        </div>
-      }
-    </div>
-  } @else {
-    <div class="text-center text-surface-500 py-4">
-      <i class="pi pi-inbox text-3xl mb-2 block"></i>
-      <span>Нормы не определены</span>
-    </div>
-  }
+  <!-- Выбор нормативного документа и кнопки методов -->
+  <!-- @see https://tailwindcss.com/docs/flex-wrap — flex-wrap для адаптивного переноса -->
+  <div class="flex flex-wrap gap-2">
+    <p-select
+      [ngModel]="selectedNorm()"
+      (ngModelChange)="selectedNorm.set($event)"
+      [options]="normOptions"
+      optionLabel="name"
+      optionValue="value"
+      variant="filled"
+      class="w-full sm:flex-1"
+    />
 
-  <ng-template pTemplate="footer">
-    <div class="text-center">
-      <p-button
-        label="Справочник норм"
-        icon="pi pi-search"
-        severity="secondary"
-        [text]="true"
-        size="small"
-      />
+    <!-- Кнопки методов НК (всегда вместе) -->
+    <div class="flex gap-2">
+      <p-button label="ВИК" severity="secondary" [outlined]="true" />
+      <p-button label="УЗК" severity="secondary" [outlined]="true" />
+      <p-button label="РК" severity="secondary" [outlined]="true" />
+      <p-button label="ПВК" severity="secondary" [outlined]="true" />
+      <p-button label="МК" severity="secondary" [outlined]="true" />
     </div>
-  </ng-template>
+  </div>
 </p-card>
