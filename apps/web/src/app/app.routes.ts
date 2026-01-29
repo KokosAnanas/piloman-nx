@@ -2,7 +2,7 @@
  * Маршруты приложения piloman.ru
  *
  * Используем lazy loading для загрузки feature-модулей по требованию.
- * Все маршруты обёрнуты в LayoutComponent для единого оформления.
+ * Все маршруты обёрнуты в Layout для единого оформления.
  *
  * @see https://angular.dev/guide/routing — Angular Routing
  * @see https://angular.dev/guide/routing/lazy-loading — Lazy Loading
@@ -29,7 +29,7 @@ export const appRoutes: Route[] = [
   {
     path: 'welds',
     loadComponent: () =>
-      import('@piloman/welds/feature-welds').then((m) => m.WeldsComponent),
+      import('@piloman/welds/feature-welds').then((m) => m.Welds),
   },
 
   /**
@@ -41,6 +41,6 @@ export const appRoutes: Route[] = [
   {
     path: 'welds/:weldId/dashboard',
     loadComponent: () =>
-      import('@piloman/welds/feature-weld-dashboard').then((m) => m.WeldDashboardComponent),
+      import('@piloman/welds/feature-weld-dashboard').then((m) => m.WeldDashboard),
   },
 ];

@@ -1,7 +1,20 @@
 {
   "permissions": {
     "allow": [
-      "Bash(dir:*)"
+      "Bash(dir:*)",
+      "Bash(pnpm nx g:*)",
+      "Bash(pnpm nx build:*)",
+      "Bash(npx nx build:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npx ng build:*)",
+      "Bash(pnpm exec nx build:*)",
+      "Bash(pnpm run lint)",
+      "Bash(pnpm nx lint:*)",
+      "Bash(echo:*)",
+      "Bash(git mv:*)",
+      "Bash(pnpm run start)",
+      "Bash(pnpm --dir \"D:\\\\Projects\\\\piloman-nx\" nx build:*)",
+      "Bash(powershell -Command \"cd ''D:\\\\Projects\\\\piloman-nx''; pnpm nx build web --skip-nx-cache\")"
     ]
   }
 }

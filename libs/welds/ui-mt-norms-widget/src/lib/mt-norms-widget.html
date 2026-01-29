@@ -1,0 +1,28 @@
+<!-- Виджет норм МК (магнитопорошковый контроль) -->
+<!-- @see https://primeng.org/card -->
+<!-- @see https://primeng.org/button -->
+<p-card class="w-full">
+  <ng-template pTemplate="header">
+    <div class="flex items-center justify-between px-4 pt-4">
+      <div class="flex items-center gap-2">
+        <i class="pi pi-bullseye text-primary text-xl"></i>
+        <span class="text-lg font-semibold">Нормы МК</span>
+      </div>
+      <!-- Кнопка закрытия виджета -->
+      <p-button
+        icon="pi pi-times"
+        severity="secondary"
+        [text]="true"
+        [rounded]="true"
+        (click)="onClose()"
+        pTooltip="Закрыть"
+        tooltipPosition="left"
+      />
+    </div>
+  </ng-template>
+
+  <!-- TODO: Содержимое норм МК -->
+  <div class="text-muted-color p-4">
+    Содержимое норм МК будет здесь...
+  </div>
+</p-card>

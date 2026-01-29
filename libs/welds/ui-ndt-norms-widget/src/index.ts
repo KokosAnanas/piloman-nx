@@ -7,4 +7,4 @@
  * @see https://nx.dev/concepts/more-concepts/library-types — Nx Library Types
  */
 
-export { NdtNormsWidgetComponent } from './lib/ndt-norms-widget.component';
+export { NdtNormsWidget } from './lib/ndt-norms-widget';

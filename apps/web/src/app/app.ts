@@ -1,7 +1,7 @@
 /**
  * Корневой компонент приложения piloman.ru
  *
- * Использует LayoutComponent из @piloman/core/layout для оформления.
+ * Использует Layout из @piloman/core/layout для оформления.
  * Layout включает: topbar, sidebar, content area, footer и configurator.
  *
  * @see https://angular.dev/guide/standalone-components — Standalone Components
@@ -9,10 +9,10 @@
 
 import { Component } from '@angular/core';
 import { RouterModule } from '@angular/router';
-import { LayoutComponent, MenuItem } from '@piloman/core/layout';
+import { Layout, MenuItem } from '@piloman/core/layout';
 
 @Component({
-  imports: [RouterModule, LayoutComponent],
+  imports: [RouterModule, Layout],
   selector: 'app-root',
   templateUrl: './app.html',
   styleUrl: './app.scss',
@@ -20,7 +20,7 @@ import { LayoutComponent, MenuItem } from '@piloman/core/layout';
 export class App {
   /**
    * Элементы навигационного меню.
-   * Передаются в LayoutComponent для отображения в Sidebar.
+   * Передаются в Layout для отображения в Sidebar.
    */
   protected readonly menuItems: MenuItem[] = [
     {

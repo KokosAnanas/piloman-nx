@@ -1,0 +1,92 @@
+<div class="p-4">
+  <!-- Заголовок страницы с кнопкой "Назад" -->
+  <div class="flex items-center gap-4 mb-6">
+    <p-button
+      icon="pi pi-arrow-left"
+      severity="secondary"
+      [text]="true"
+      routerLink="/welds"
+      pTooltip="Вернуться к реестру"
+      tooltipPosition="top"
+      [showDelay]="1000"
+    />
+    @if (weld()) {
+      <h1 class="text-2xl font-bold">
+        Сварное соединение № {{ weld()!.weldNumber }}
+      </h1>
+    } @else if (loading()) {
+      <h1 class="text-2xl font-bold text-surface-500">Загрузка...</h1>
+    } @else {
+      <h1 class="text-2xl font-bold">Сварное соединение № {{ weldId() }}</h1>
+    }
+  </div>
+
+  <!-- Индикатор загрузки -->
+  @if (loading()) {
+    <div class="flex justify-center items-center p-8">
+      <i class="pi pi-spin pi-spinner text-4xl text-primary"></i>
+    </div>
+  }
+
+  <!-- Сообщение об ошибке -->
+  @if (error()) {
+    <div class="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-400">
+      <i class="pi pi-exclamation-triangle mr-2"></i>
+      {{ error() }}
+    </div>
+  }
+
+  <!-- Контент дашборда -->
+  @if (weld() && !loading()) {
+    <div class="flex flex-col gap-4">
+      <!-- Параметры стыка — на всю ширину -->
+      <app-weld-params-widget [weldId]="weldId()" [weld]="weld()" />
+
+      <!-- Заключения и Нормы — две колонки на desktop, одна на mobile -->
+      <div class="flex flex-col lg:flex-row gap-4">
+        <div class="w-full lg:w-1/2">
+          <app-ndt-reports-widget
+            #ndtReportsWidget
+            [weldId]="weldId()"
+            (methodToggled)="onReportMethodToggled($event)"
+          />
+        </div>
+        <div class="w-full lg:w-1/2">
+          <app-ndt-norms-widget
+            #ndtNormsWidget
+            [weldId]="weldId()"
+            (methodToggled)="onNormsMethodToggled($event)"
+          />
+        </div>
+      </div>
+
+      <!-- Виджеты заключений НК -->
+      @if (activeWidget() === 'vik-report') {
+        <app-vt-report-widget (closed)="onWidgetClosed()" />
+      }
+      @if (activeWidget() === 'uzk-report') {
+        <app-ut-report-widget (closed)="onWidgetClosed()" />
+      }
+      @if (activeWidget() === 'rk-report') {
+        <app-rt-report-widget (closed)="onWidgetClosed()" />
+      }
+
+      <!-- Виджеты норм НК -->
+      @if (activeWidget() === 'vik-norms') {
+        <app-vt-norms-widget (closed)="onWidgetClosed()" />
+      }
+      @if (activeWidget() === 'uzk-norms') {
+        <app-ut-norms-widget (closed)="onWidgetClosed()" />
+      }
+      @if (activeWidget() === 'rk-norms') {
+        <app-rt-norms-widget (closed)="onWidgetClosed()" />
+      }
+      @if (activeWidget() === 'pvk-norms') {
+        <app-pt-norms-widget (closed)="onWidgetClosed()" />
+      }
+      @if (activeWidget() === 'mk-norms') {
+        <app-mt-norms-widget (closed)="onWidgetClosed()" />
+      }
+    </div>
+  }
+</div>

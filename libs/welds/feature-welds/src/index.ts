@@ -7,4 +7,4 @@
  * @see https://nx.dev/concepts/more-concepts/library-types — Nx Library Types
  */
 
-export { WeldsComponent } from './lib/welds.component';
+export { Welds } from './lib/welds';

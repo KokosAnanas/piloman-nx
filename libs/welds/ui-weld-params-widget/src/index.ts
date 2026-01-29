@@ -7,4 +7,4 @@
  * @see https://nx.dev/concepts/more-concepts/library-types — Nx Library Types
  */
 
-export { WeldParamsWidgetComponent } from './lib/weld-params-widget.component';
+export { WeldParamsWidget } from './lib/weld-params-widget';

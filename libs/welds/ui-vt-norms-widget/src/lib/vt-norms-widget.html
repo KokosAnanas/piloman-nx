@@ -1,0 +1,28 @@
+<!-- Виджет норм ВИК (визуальный и измерительный контроль) -->
+<!-- @see https://primeng.org/card -->
+<!-- @see https://primeng.org/button -->
+<p-card class="w-full">
+  <ng-template pTemplate="header">
+    <div class="flex items-center justify-between px-4 pt-4">
+      <div class="flex items-center gap-2">
+        <i class="pi pi-eye text-primary text-xl"></i>
+        <span class="text-lg font-semibold">Нормы ВИК</span>
+      </div>
+      <!-- Кнопка закрытия виджета -->
+      <p-button
+        icon="pi pi-times"
+        severity="secondary"
+        [text]="true"
+        [rounded]="true"
+        (click)="onClose()"
+        pTooltip="Закрыть"
+        tooltipPosition="left"
+      />
+    </div>
+  </ng-template>
+
+  <!-- TODO: Содержимое норм ВИК -->
+  <div class="text-muted-color p-4">
+    Содержимое норм ВИК будет здесь...
+  </div>
+</p-card>

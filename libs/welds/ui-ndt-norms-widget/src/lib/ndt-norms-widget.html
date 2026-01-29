@@ -1,0 +1,62 @@
+<!-- Виджет норм отбраковки -->
+<!-- @see https://primeng.org/card -->
+<!-- @see https://primeng.org/select -->
+<p-card class="w-full">
+  <ng-template pTemplate="header">
+    <div class="flex items-center justify-between px-4 pt-4">
+      <div class="flex items-center gap-2">
+        <i class="pi pi-book text-primary text-xl"></i>
+        <span class="text-lg font-semibold">Нормы отбраковки</span>
+      </div>
+    </div>
+  </ng-template>
+
+  <!-- Выбор нормативного документа и кнопки методов -->
+  <!-- @see https://tailwindcss.com/docs/flex-wrap — flex-wrap для адаптивного переноса -->
+  <div class="flex flex-wrap gap-2">
+    <p-select
+      [ngModel]="selectedNorm()"
+      (ngModelChange)="selectedNorm.set($event)"
+      [options]="normOptions"
+      optionLabel="name"
+      optionValue="value"
+      variant="filled"
+      class="w-full sm:flex-1"
+    />
+
+    <!-- Кнопки методов НК (всегда вместе) -->
+    <!-- Кнопка подсвечена (не outlined), когда соответствующий виджет открыт -->
+    <div class="flex gap-2">
+      <p-button
+        label="ВИК"
+        [severity]="activeMethod() === 'vik' ? 'primary' : 'secondary'"
+        [outlined]="activeMethod() !== 'vik'"
+        (click)="toggleMethod('vik')"
+      />
+      <p-button
+        label="УЗК"
+        [severity]="activeMethod() === 'uzk' ? 'primary' : 'secondary'"
+        [outlined]="activeMethod() !== 'uzk'"
+        (click)="toggleMethod('uzk')"
+      />
+      <p-button
+        label="РК"
+        [severity]="activeMethod() === 'rk' ? 'primary' : 'secondary'"
+        [outlined]="activeMethod() !== 'rk'"
+        (click)="toggleMethod('rk')"
+      />
+      <p-button
+        label="ПВК"
+        [severity]="activeMethod() === 'pvk' ? 'primary' : 'secondary'"
+        [outlined]="activeMethod() !== 'pvk'"
+        (click)="toggleMethod('pvk')"
+      />
+      <p-button
+        label="МК"
+        [severity]="activeMethod() === 'mk' ? 'primary' : 'secondary'"
+        [outlined]="activeMethod() !== 'mk'"
+        (click)="toggleMethod('mk')"
+      />
+    </div>
+  </div>
+</p-card>

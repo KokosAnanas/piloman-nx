@@ -1,0 +1,7 @@
+{
+  "name": "welds-ui-vt-report-widget",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/welds/ui-vt-report-widget/src",
+  "projectType": "library",
+  "tags": ["scope:welds", "type:ui"]
+}

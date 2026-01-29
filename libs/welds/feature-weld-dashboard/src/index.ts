@@ -7,4 +7,4 @@
  * @see https://nx.dev/concepts/more-concepts/library-types — Nx Library Types
  */
 
-export { WeldDashboardComponent } from './lib/weld-dashboard.component';
+export { WeldDashboard } from './lib/weld-dashboard';

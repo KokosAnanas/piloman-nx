@@ -7,4 +7,4 @@
  * @see https://nx.dev/concepts/more-concepts/library-types — Nx Library Types
  */
 
-export { NdtReportsWidgetComponent } from './lib/ndt-reports-widget.component';
+export { NdtReportsWidget } from './lib/ndt-reports-widget';
