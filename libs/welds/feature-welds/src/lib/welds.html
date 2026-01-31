@@ -7,27 +7,56 @@
   <!-- @see https://primeng.org/confirmdialog -->
   <p-confirmDialog />
 
-  <!-- Заголовок + Column Toggle + кнопка добавления -->
-  <div class="flex items-center mb-4">
-    <h1 class="text-2xl font-bold mr-5">Реестр сварных соединений</h1>
-    <div class="flex items-center gap-2">
-      <!-- Column Toggle -->
-      <!-- @see https://primeng.org/table#column-toggle -->
-      <p-multiselect
-        [options]="cols"
-        [(ngModel)]="selectedColumns"
-        optionLabel="header"
-        selectedItemsLabel="Колонки: {0}"
-        placeholder="Выбрать колонки"
-        class="w-54"
-        [maxSelectedLabels]="2"></p-multiselect>
-      <p-button
-        label="Добавить стык"
-        icon="pi pi-plus"
-        [disabled]="isAdding()"
-        (onClick)="startAdding()"
-      />
-    </div>
+  <!-- Заголовок -->
+  <h1 class="text-2xl font-bold mb-4">Реестр сварных соединений</h1>
+
+  <!-- Панель управления: Объект + Column Toggle + Добавить стык -->
+  <!-- @see https://primeng.org/select#template -->
+  <div class="flex flex-wrap items-center gap-2 mb-4">
+    <label class="font-semibold whitespace-nowrap">Объект:</label>
+    <p-select
+      [options]="objects()"
+      [ngModel]="selectedObject()"
+      (ngModelChange)="onObjectChange($event)"
+      optionLabel="objectName"
+      placeholder="Выберите объект"
+      [filter]="true"
+      filterPlaceholder="Поиск..."
+      class="w-full md:w-80"
+    >
+      <!-- Footer с кнопкой добавления нового объекта -->
+      <ng-template pTemplate="footer">
+        <div class="p-2 border-t border-surface-200 dark:border-surface-700">
+          <p-button
+            label="Добавить новый объект"
+            icon="pi pi-plus"
+            [text]="true"
+            severity="secondary"
+            class="w-full"
+            (onClick)="showObjectDialog()"
+          />
+        </div>
+      </ng-template>
+    </p-select>
+
+    <!-- Column Toggle -->
+    <!-- @see https://primeng.org/table#column-toggle -->
+    <p-multiselect
+      [options]="cols"
+      [(ngModel)]="selectedColumns"
+      optionLabel="header"
+      selectedItemsLabel="Колонки: {0}"
+      placeholder="Выбрать колонки"
+      class="w-54"
+      [maxSelectedLabels]="2"></p-multiselect>
+
+    <p-button
+      label="Добавить стык"
+      icon="pi pi-plus"
+      [disabled]="isAdding() || !selectedObject()"
+      [pTooltip]="!selectedObject() ? 'Сначала выберите объект' : ''"
+      (onClick)="startAdding()"
+    />
   </div>
 
   <!-- Индикатор загрузки -->
@@ -240,11 +269,84 @@
       <ng-template pTemplate="emptymessage">
         <tr>
           <td [attr.colspan]="selectedColumns.length + 1" class="text-center p-4">
-            Нет данных. Нажмите «Добавить стык» для создания записи.
+            @if (!selectedObject()) {
+              Выберите или создайте объект строительства для начала работы.
+            } @else {
+              Нет данных. Нажмите «Добавить стык» для создания записи.
+            }
           </td>
         </tr>
       </ng-template>
       </p-table>
     </div>
   </div>
+
+  <!-- Диалог создания объекта строительства -->
+  <!-- @see https://primeng.org/dialog -->
+  <p-dialog
+    header="Новый объект строительства"
+    [(visible)]="isObjectDialogVisible"
+    [modal]="true"
+    [style]="{ width: '90vw', maxWidth: '500px' }"
+    [draggable]="false"
+    [resizable]="false"
+  >
+    <div [formGroup]="objectForm" class="flex flex-col gap-4">
+      <!-- Название объекта -->
+      <div class="flex flex-col gap-2">
+        <label for="objectName" class="font-semibold">Название объекта *</label>
+        <input
+          id="objectName"
+          pInputText
+          formControlName="objectName"
+          placeholder="Например: Газопровод Ду 500 участок 1"
+          class="w-full"
+          [ngClass]="{'ng-invalid ng-dirty': isObjectFieldInvalid('objectName')}"
+        />
+      </div>
+
+      <!-- Подрядчик -->
+      <div class="flex flex-col gap-2">
+        <label for="contractor" class="font-semibold">Подрядчик *</label>
+        <input
+          id="contractor"
+          pInputText
+          formControlName="contractor"
+          placeholder="Например: ООО СтройМонтаж"
+          class="w-full"
+          [ngClass]="{'ng-invalid ng-dirty': isObjectFieldInvalid('contractor')}"
+        />
+      </div>
+
+      <!-- Заказчик -->
+      <div class="flex flex-col gap-2">
+        <label for="customer" class="font-semibold">Заказчик *</label>
+        <input
+          id="customer"
+          pInputText
+          formControlName="customer"
+          placeholder="Например: ПАО Газпром"
+          class="w-full"
+          [ngClass]="{'ng-invalid ng-dirty': isObjectFieldInvalid('customer')}"
+        />
+      </div>
+    </div>
+
+    <!-- Footer диалога -->
+    <ng-template pTemplate="footer">
+      <div class="flex justify-end gap-2">
+        <p-button
+          label="Отмена"
+          severity="secondary"
+          (onClick)="isObjectDialogVisible.set(false)"
+        />
+        <p-button
+          label="Сохранить"
+          icon="pi pi-check"
+          [disabled]="objectForm.invalid"
+          (onClick)="saveObject()"
+        />
+      </div>
+    </ng-template>
+  </p-dialog>
 </div>

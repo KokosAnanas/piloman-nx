@@ -40,6 +40,21 @@ export type WeldDocument = HydratedDocument<Weld>;
 })
 export class Weld {
   /**
+   * Название объекта строительства
+   * Индекс для эффективной фильтрации стыков по объекту
+   */
+  @Prop({ index: true })
+  objectName?: string;
+
+  /** Наименование организации подрядчика */
+  @Prop()
+  contractor?: string;
+
+  /** Наименование организации заказчика */
+  @Prop()
+  customer?: string;
+
+  /**
    * Номер стыка/шва — основной бизнес-идентификатор
    * Индекс для быстрого поиска
    */

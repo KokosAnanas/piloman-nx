@@ -34,6 +34,7 @@ import { MultiSelectModule } from 'primeng/multiselect';
 import { ToastModule } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { TooltipModule } from 'primeng/tooltip';
+import { DialogModule } from 'primeng/dialog';
 import { MessageService, ConfirmationService, SelectItem } from 'primeng/api';
 
 // Data Access — API сервис
@@ -57,6 +58,15 @@ interface TableColumn {
  * Тип строки таблицы: либо реальный Weld, либо draft (черновик для добавления)
  */
 type TableRow = Weld | { _isDraft: true };
+
+/**
+ * Интерфейс для объекта строительства (денормализованные данные)
+ */
+interface ConstructionObjectOption {
+  objectName: string;
+  contractor: string;
+  customer: string;
+}
 
 /**
  * Колонки, скрытые по умолчанию
@@ -91,6 +101,7 @@ const HIDDEN_BY_DEFAULT = ['weldDate', 'weldingProcess', 'joint', 'weldStatus', 
     ToastModule,
     ConfirmDialogModule,
     TooltipModule,
+    DialogModule,
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './welds.html',
@@ -124,6 +135,21 @@ export class Welds implements OnInit {
    * @see https://primeng.org/confirmdialog
    */
   private readonly confirmationService = inject(ConfirmationService);
+
+  /**
+   * Список уникальных объектов строительства (извлечённых из welds)
+   */
+  objects = signal<ConstructionObjectOption[]>([]);
+
+  /**
+   * Выбранный объект для фильтрации и привязки новых стыков
+   */
+  selectedObject = signal<ConstructionObjectOption | null>(null);
+
+  /**
+   * Видимость диалога создания объекта
+   */
+  isObjectDialogVisible = signal<boolean>(false);
 
   /**
    * Список сварных соединений (Angular Signal)
@@ -215,6 +241,15 @@ export class Welds implements OnInit {
   });
 
   /**
+   * Форма для создания нового объекта строительства
+   */
+  objectForm: FormGroup = this.fb.group({
+    objectName: ['', [Validators.required]],
+    contractor: ['', [Validators.required]],
+    customer: ['', [Validators.required]],
+  });
+
+  /**
    * Опции для выпадающего списка "Уровень качества"
    */
   readonly qualityLevelOptions: SelectItem[] = [
@@ -278,14 +313,21 @@ export class Welds implements OnInit {
 
   /**
    * Загрузка списка сварных соединений с API
+   * При первой загрузке также извлекает уникальные объекты
    */
   private loadWelds(): void {
     this.loading.set(true);
+    const objectName = this.selectedObject()?.objectName;
 
-    this.weldsApi.list().subscribe({
+    this.weldsApi.list(objectName ? { objectName } : undefined).subscribe({
       next: (data) => {
         this.welds.set(data);
         this.loading.set(false);
+
+        // Извлекаем уникальные объекты из всех стыков (только при первой загрузке)
+        if (this.objects().length === 0) {
+          this.extractUniqueObjects(data);
+        }
       },
       error: (err) => {
         console.error('Ошибка загрузки данных:', err);
@@ -297,6 +339,92 @@ export class Welds implements OnInit {
         });
       },
     });
+  }
+
+  /**
+   * Извлечение уникальных объектов строительства из списка стыков
+   */
+  private extractUniqueObjects(welds: Weld[]): void {
+    const objectsMap = new Map<string, ConstructionObjectOption>();
+
+    for (const weld of welds) {
+      if (weld.objectName) {
+        objectsMap.set(weld.objectName, {
+          objectName: weld.objectName,
+          contractor: weld.contractor || '',
+          customer: weld.customer || '',
+        });
+      }
+    }
+
+    this.objects.set(Array.from(objectsMap.values()));
+  }
+
+  /**
+   * Обработчик смены выбранного объекта
+   * Перезагружает список стыков для нового объекта
+   */
+  onObjectChange(object: ConstructionObjectOption | null): void {
+    this.selectedObject.set(object);
+    this.cancelAdding();
+    this.loadWelds();
+  }
+
+  /**
+   * Открытие диалога создания объекта строительства
+   */
+  showObjectDialog(): void {
+    this.objectForm.reset({
+      objectName: '',
+      contractor: '',
+      customer: '',
+    });
+    this.isObjectDialogVisible.set(true);
+  }
+
+  /**
+   * Сохранение нового объекта строительства
+   * Добавляет в локальный список и выбирает его
+   */
+  saveObject(): void {
+    this.objectForm.markAllAsTouched();
+
+    if (this.objectForm.invalid) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Внимание',
+        detail: 'Заполните все обязательные поля',
+      });
+      return;
+    }
+
+    const newObject: ConstructionObjectOption = {
+      objectName: this.objectForm.value.objectName,
+      contractor: this.objectForm.value.contractor,
+      customer: this.objectForm.value.customer,
+    };
+
+    // Добавляем в список и выбираем
+    this.objects.update((objects) => [newObject, ...objects]);
+    this.selectedObject.set(newObject);
+    this.isObjectDialogVisible.set(false);
+
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Успешно',
+      detail: `Объект "${newObject.objectName}" добавлен`,
+    });
+
+    // Перезагружаем стыки (будет пустой список для нового объекта)
+    this.loadWelds();
+  }
+
+  /**
+   * Проверка валидности поля формы объекта
+   */
+  isObjectFieldInvalid(fieldName: string): boolean {
+    const control = this.objectForm.get(fieldName);
+    return control ? control.invalid && (control.dirty || control.touched) : false;
   }
 
   /**
@@ -389,11 +517,27 @@ export class Welds implements OnInit {
       return;
     }
 
+    // Проверяем, что выбран объект строительства
+    const selectedObj = this.selectedObject();
+    if (!selectedObj) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Внимание',
+        detail: 'Сначала выберите или создайте объект строительства',
+      });
+      return;
+    }
+
     this.isSaving.set(true);
 
     // Формируем DTO для API
     const formValue = this.newRowForm.value;
     const dto: CreateWeldDto = {
+      // Данные объекта строительства
+      objectName: selectedObj.objectName,
+      contractor: selectedObj.contractor,
+      customer: selectedObj.customer,
+      // Данные стыка
       weldNumber: formValue.weldNumber,
       diameter: formValue.diameter,
       thickness1: formValue.thickness1,

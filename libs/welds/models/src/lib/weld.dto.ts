@@ -23,6 +23,15 @@ import type {
  * Обязательные поля: weldNumber, diameter, thickness1, qualityLevel
  */
 export interface CreateWeldDto {
+  /** Название объекта строительства */
+  objectName?: string;
+
+  /** Наименование организации подрядчика */
+  contractor?: string;
+
+  /** Наименование организации заказчика */
+  customer?: string;
+
   /** Номер стыка/шва — обязательно */
   weldNumber: string;
 
@@ -79,4 +88,7 @@ export interface WeldListQuery {
 
   /** Поиск по номеру стыка (weldNumber), case-insensitive */
   search?: string;
+
+  /** Фильтрация по названию объекта строительства */
+  objectName?: string;
 }

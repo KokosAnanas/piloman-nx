@@ -10,7 +10,7 @@
 
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { FilterQuery, Model } from 'mongoose';
 
 import { Weld, WeldDocument } from './schemas/weld.schema';
 import { CreateWeldDto } from './dto/create-weld.dto';
@@ -51,18 +51,28 @@ export class WeldsService {
   /**
    * Получение списка сварных соединений
    *
-   * Поддерживает поиск по номеру стыка (weldNumber), case-insensitive.
+   * Поддерживает:
+   * - Поиск по номеру стыка (weldNumber), case-insensitive
+   * - Фильтрацию по названию объекта строительства (objectName)
    *
    * @param search - строка поиска (опционально)
+   * @param objectName - название объекта строительства для фильтрации (опционально)
    * @returns массив документов Weld
    *
    * @see https://mongoosejs.com/docs/api/model.html#Model.find()
    */
-  async findAll(search?: string): Promise<Weld[]> {
-    // Если передан search — фильтруем по weldNumber (регистронезависимо)
-    const filter = search
-      ? { weldNumber: { $regex: search, $options: 'i' } }
-      : {};
+  async findAll(search?: string, objectName?: string): Promise<Weld[]> {
+    const filter: FilterQuery<WeldDocument> = {};
+
+    // Фильтр по номеру стыка (регистронезависимо)
+    if (search) {
+      filter.weldNumber = { $regex: search, $options: 'i' };
+    }
+
+    // Фильтр по названию объекта строительства
+    if (objectName) {
+      filter.objectName = objectName;
+    }
 
     // Сортировка по дате создания (новые первыми)
     return this.weldModel.find(filter).sort({ createdAt: -1 }).exec();

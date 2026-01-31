@@ -77,6 +77,10 @@ export class WeldsApiService {
     if (query?.limit) {
       params = params.set('limit', query.limit.toString());
     }
+    // Фильтрация по названию объекта строительства
+    if (query?.objectName) {
+      params = params.set('objectName', query.objectName);
+    }
 
     return this.http.get<Weld[]>(this.baseUrl, { params });
   }

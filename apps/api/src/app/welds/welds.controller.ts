@@ -58,15 +58,20 @@ export class WeldsController {
    * GET /api/welds — получение списка сварных соединений
    *
    * @param search - опциональный поиск по номеру стыка (weldNumber)
+   * @param objectName - опциональная фильтрация по названию объекта строительства
    * @returns массив соединений
    *
    * @example
    * curl http://localhost:3000/api/welds
    * curl http://localhost:3000/api/welds?search=ШС-001
+   * curl http://localhost:3000/api/welds?objectName=Газопровод
    */
   @Get()
-  findAll(@Query('search') search?: string) {
-    return this.weldsService.findAll(search);
+  findAll(
+    @Query('search') search?: string,
+    @Query('objectName') objectName?: string
+  ) {
+    return this.weldsService.findAll(search, objectName);
   }
 
   /**

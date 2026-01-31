@@ -66,6 +66,15 @@ export interface Weld {
   /** Уникальный идентификатор (MongoDB ObjectId → string) */
   id: string;
 
+  /** Название объекта строительства */
+  objectName?: string;
+
+  /** Наименование организации подрядчика */
+  contractor?: string;
+
+  /** Наименование организации заказчика */
+  customer?: string;
+
   /** Номер стыка/шва, например "12-45" — основной бизнес-идентификатор */
   weldNumber: string;
 

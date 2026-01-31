@@ -25,6 +25,30 @@ import {
  */
 export class CreateWeldDto {
   /**
+   * Название объекта строительства
+   * @example "Газопровод Ду 500 участок 1"
+   */
+  @IsOptional()
+  @IsString()
+  objectName?: string;
+
+  /**
+   * Наименование организации подрядчика
+   * @example "ООО СтройМонтаж"
+   */
+  @IsOptional()
+  @IsString()
+  contractor?: string;
+
+  /**
+   * Наименование организации заказчика
+   * @example "ПАО Газпром"
+   */
+  @IsOptional()
+  @IsString()
+  customer?: string;
+
+  /**
    * Номер стыка/шва (например "12-45")
    * @example "ШС-001"
    */
